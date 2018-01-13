@@ -1,7 +1,7 @@
 # 2018-Robot-Project
 The code for the Team 3146 2018 FRC robot, written in Java.
 
-Conventions for editing.
+Conventions for editing.       
 
 -Make use of frequent and understandable comments.
 -Make comments concise when inline, and descriptive when heading a file or method.
