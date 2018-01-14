@@ -1,15 +1,18 @@
 
 package org.usfirst.frc.team3146.robot;
 
+//Import all Required Libraries
 import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 import org.usfirst.frc.team3146.robot.commands.ExampleCommand;
 import org.usfirst.frc.team3146.robot.subsystems.ExampleSubsystem;
+
+
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -19,6 +22,17 @@ import org.usfirst.frc.team3146.robot.subsystems.ExampleSubsystem;
  * directory.
  */
 public class Robot extends IterativeRobot {
+	
+	//Initialize the Drive Channels
+	final int kRightChannel = 1; //The PWM values stated here may change based on robot design
+	final int kLeftChannel = 2; //The PWM values stated here may change based on robot design
+	
+	//Define RobotDrive as robotDrive
+	RobotDrive robotDrive;
+	
+	//Define Joystick channels
+	final int kJoystickChannel1 = 1; //USB port for the first joy stick (accessory stick)
+	final int kJoystickChannel2 = 2; //USB port for the second joy stick (drive stick)
 
 	public static final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
 	public static OI oi;
