@@ -1,6 +1,8 @@
 package org.usfirst.frc.team3146.robot;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -12,6 +14,29 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * directory.
  */
 public class Robot extends IterativeRobot {
+	
+	//Define channels for drive motors 
+	final int kLeftChannel = 0;
+	final int kRightChannel = 1;
+	
+	//Define channels for the joy sticks
+	final int JoystickChannel1 = 0;
+	
+	//Define the robots drive train as "robotDrive"
+	RobotDrive robotDrive;
+	
+	//Starting the "Robot" function in order to define drive train and motor inversions
+	public Robot() {
+		//Robot drive
+		robotDrive = new RobotDrive(kLeftChannel, kRightChannel);
+		
+		//Motor inversions 
+		//robotDrive.setInvertedMotor(kLeftChannel, true);
+		//robotDrive.setInvertedMotor(kRightChannel, true);
+		
+	}
+	
+	// Define strings that are associated with different autonomous modes
 	final String defaultAuto = "Default";
 	final String customAuto = "My Auto";
 	String autoSelected;
