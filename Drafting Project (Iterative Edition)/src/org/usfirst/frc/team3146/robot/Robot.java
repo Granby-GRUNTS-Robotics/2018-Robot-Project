@@ -1,8 +1,10 @@
 package org.usfirst.frc.team3146.robot;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -20,26 +22,35 @@ public class Robot extends IterativeRobot {
 	final int kRightChannel = 1;
 	
 	//Define channels for the joy sticks
-	final int JoystickChannel1 = 0;
+	final int JoystickChannel = 0;
+	
+	//Define the actual joy sticks 
+	Joystick stick1 = new Joystick(JoystickChannel);
 	
 	//Define the robots drive train as "robotDrive"
 	RobotDrive robotDrive;
+	
+	//Define the timer variable
+	Timer timer = new Timer();
 	
 	//Starting the "Robot" function in order to define drive train and motor inversions
 	public Robot() {
 		//Robot drive
 		robotDrive = new RobotDrive(kLeftChannel, kRightChannel);
 		
-		//Motor inversions 
+		//Motor inversions (only uncomment if necessary)
 		//robotDrive.setInvertedMotor(kLeftChannel, true);
 		//robotDrive.setInvertedMotor(kRightChannel, true);
 		
 	}
 	
 	// Define strings that are associated with different autonomous modes
-	final String defaultAuto = "Default";
-	final String customAuto = "My Auto";
+	final String defaultAuto = "Cross Baseline";
+	final String customAuto = "Single Switch Placement";
+	final String customAuto2 = "Double Switch Placement";
 	String autoSelected;
+	
+	//Define "chooser" object
 	SendableChooser<String> chooser = new SendableChooser<>();
 
 	/**
@@ -48,8 +59,12 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
-		chooser.addDefault("Default Auto", defaultAuto);
-		chooser.addObject("My Auto", customAuto);
+		// add auto options
+		chooser.addDefault("Cross Baseline", defaultAuto);
+		chooser.addObject("Single Switch Placement", customAuto);
+		chooser.addObject("Double Switch Placement", customAuto2);
+		
+		//Publishes auto selector to smartdashboard
 		SmartDashboard.putData("Auto choices", chooser);
 	}
 
@@ -70,6 +85,10 @@ public class Robot extends IterativeRobot {
 		// autoSelected = SmartDashboard.getString("Auto Selector",
 		// defaultAuto);
 		System.out.println("Auto selected: " + autoSelected);
+		
+		//Reset and start the timer
+		timer.reset();
+		timer.start();
 	}
 
 	/**
@@ -78,12 +97,29 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void autonomousPeriodic() {
 		switch (autoSelected) {
-		case customAuto:
-			// Put custom auto code here
+		case customAuto: // Only attempts to place a single power cube
+			if(timer.get() < 2.0) {
+				robotDrive.drive(.5, 0);// A sample of how you should time out functions during auto
+			} else {
+				robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
+			}
 			break;
+			
+		case customAuto2: // Places one power cube and attempts to place another
+			if(timer.get() < 2.0) {
+				robotDrive.drive(.2, 0); // A sample of how you should time out functions during auto
+			} else {
+				robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
+			}  
+			break;
+			
 		case defaultAuto:
-		default:
-			// Put default auto code here
+		default: // Simply crosses the baseline
+			if(timer.get() < 2.0) {
+				robotDrive.drive(.5, 0); // A sample of how you should time out functions during auto
+			}else {
+				robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
+			}
 			break;
 		}
 	}
@@ -93,6 +129,13 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void teleopPeriodic() {
+		robotDrive.setSafetyEnabled(true); 
+		while (isOperatorControl() && isEnabled()) { // Ensures that robot is enabled and in Teleoperated mode
+			
+			
+			
+			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
+		}
 	}
 
 	/**

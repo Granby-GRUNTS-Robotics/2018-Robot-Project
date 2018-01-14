@@ -1,0 +1,25 @@
+<xml version="1.0">
+<dashboard>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.Label">
+		<location x="103" y="436"/>
+		<property name="Text" value="Robot Connection"/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
+		<location x="707" y="57"/>
+		<width>434</width>
+		<height>328</height>
+		<property name="Camera Choice" value=""/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.CameraServerViewer">
+		<location x="56" y="58"/>
+		<width>494</width>
+		<height>320</height>
+		<property name="Camera Choice" value=""/>
+	</static-widget>
+	<static-widget class="edu.wpi.first.smartdashboard.gui.elements.ConnectionIndicator">
+		<location x="59" y="425"/>
+	</static-widget>
+</dashboard>
+<live-window>
+</live-window>
+</xml>
