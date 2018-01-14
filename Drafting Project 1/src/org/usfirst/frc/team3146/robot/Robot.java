@@ -31,8 +31,7 @@ public class Robot extends IterativeRobot {
 	RobotDrive robotDrive;
 	
 	//Define Joystick channels
-	final int kJoystickChannel1 = 1; //USB port for the first joy stick (accessory stick)
-	final int kJoystickChannel2 = 2; //USB port for the second joy stick (drive stick)
+	final int kJoystickChannel1 = 1; //USB port for the joysticks (they are defined as a single joystick)
 
 	public static final ExampleSubsystem exampleSubsystem = new ExampleSubsystem();
 	public static OI oi;
