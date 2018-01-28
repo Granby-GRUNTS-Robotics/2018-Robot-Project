@@ -1,5 +1,7 @@
 package org.usfirst.frc.team3146.robot;
 
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
+
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
@@ -7,6 +9,7 @@ import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -20,6 +23,10 @@ public class Robot extends IterativeRobot {
 	//Define channels for drive motors 
 	final int kLeftChannel = 0;
 	final int kRightChannel = 1;
+	
+	//Intitialize the Victor SPX motor controls
+	WPI_VictorSPX motor1 = new WPI_VictorSPX(kLeftChannel);
+	WPI_VictorSPX motor2 = new WPI_VictorSPX(kRightChannel);
 	
 	//Define channels for the joy sticks
 	final int JoystickChannel = 0;
@@ -36,11 +43,17 @@ public class Robot extends IterativeRobot {
 	//Starting the "Robot" function in order to define drive train and motor inversions
 	public Robot() {
 		//Robot drive
-		robotDrive = new RobotDrive(kLeftChannel, kRightChannel);
+		robotDrive = new RobotDrive(motor1, motor2);
 		
 		//Motor inversions (only uncomment if necessary)
-		//robotDrive.setInvertedMotor(kLeftChannel, true);
-		//robotDrive.setInvertedMotor(kRightChannel, true);
+		//robotDrive.setInvertedMotor(motor1, true);
+		//robotDrive.setInvertedMotor(motor2, true);
+		
+		//motor2.setInverted(true);
+		//motor1.setInverted(true);
+		
+		
+		//Swap the axis channels
 		
 	}
 	
@@ -66,6 +79,8 @@ public class Robot extends IterativeRobot {
 		
 		//Publishes auto selector to smartdashboard
 		SmartDashboard.putData("Auto choices", chooser);
+		
+		
 	}
 
 	/**
@@ -132,11 +147,22 @@ public class Robot extends IterativeRobot {
 		robotDrive.setSafetyEnabled(true); 
 		while (isOperatorControl() && isEnabled()) { // Ensures that robot is enabled and in Teleoperated mode
 			
+			//Smooth drive code (with tangent)
+			double slow_val_x = (stick1.getX() / -2); 
+			double slow_val_y = (Math.tan(stick1.getY()) * .5);
+			if(stick1.getRawButton(1)) {
+				robotDrive.arcadeDrive(slow_val_y, slow_val_x);
+			}else{
+				robotDrive.arcadeDrive(stick1.getY(), (stick1.getX() * -1));
+			}
+			
 			
 			
 			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
 		}
 	}
+
+	
 
 	/**
 	 * This function is called periodically during test mode
@@ -145,4 +171,3 @@ public class Robot extends IterativeRobot {
 	public void testPeriodic() {
 	}
 }
-
