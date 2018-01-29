@@ -1,11 +1,13 @@
 package org.usfirst.frc.team3146.robot;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
+import com.ctre.phoenix.sensors.PigeonIMU;
 
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
+import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -27,6 +29,15 @@ public class Robot extends IterativeRobot {
 	//Intitialize the Victor SPX motor controls
 	WPI_VictorSPX motor1 = new WPI_VictorSPX(kLeftChannel);
 	WPI_VictorSPX motor2 = new WPI_VictorSPX(kRightChannel);
+	
+	//Initialize pnuematic gripper
+	Solenoid grip0 = new Solenoid(1, 0);
+	Solenoid grip1 = new Solenoid(1, 1);
+	
+	//Initialize the Gyro/magnetometer "pidgy"
+	PigeonIMU pigeon = new PigeonIMU(0);
+	
+	double mag_val;
 	
 	//Define channels for the joy sticks
 	final int JoystickChannel = 0;
@@ -148,16 +159,21 @@ public class Robot extends IterativeRobot {
 		while (isOperatorControl() && isEnabled()) { // Ensures that robot is enabled and in Teleoperated mode
 			
 			//Smooth drive code (with tangent)
-			double slow_val_x = (stick1.getX() / -2); 
-			double slow_val_y = (Math.tan(stick1.getY()) * .5);
+			double slow_val_x = (stick1.getX() / -2); //inverts and reduces x value
+			double slow_val_y = (Math.tan(stick1.getY()) * .5); //reduces y value on a tangent curve
+			
+			//Drive functions
 			if(stick1.getRawButton(1)) {
-				robotDrive.arcadeDrive(slow_val_y, slow_val_x);
+				robotDrive.arcadeDrive(slow_val_y, slow_val_x); //smooth drive when top trigger is pressed
 			}else{
-				robotDrive.arcadeDrive(stick1.getY(), (stick1.getX() * -1));
+				robotDrive.arcadeDrive(stick1.getY(), (stick1.getX() * -1)); //normal drive
 			}
 			
-			
-			
+			//Map buttons to proper pnumatic controls
+			if(stick1.getRawButton(8)) {
+				grip0.set(true);
+				grip1.set(false);
+			}
 			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
 		}
 	}
