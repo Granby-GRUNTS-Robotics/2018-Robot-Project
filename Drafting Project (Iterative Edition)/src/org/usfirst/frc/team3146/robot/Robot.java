@@ -90,6 +90,7 @@ public class Robot extends IterativeRobot {
 		
 		//Publishes auto selector to smartdashboard
 		SmartDashboard.putData("Auto choices", chooser);
+		SmartDashboard.putBoolean("Smooth Drive", stick1.getRawButton(1));
 		
 		
 	}
@@ -148,6 +149,7 @@ public class Robot extends IterativeRobot {
 			}
 			break;
 		}
+		
 	}
 
 	/**
