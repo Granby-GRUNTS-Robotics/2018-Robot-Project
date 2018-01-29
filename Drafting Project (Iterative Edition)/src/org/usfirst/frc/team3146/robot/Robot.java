@@ -43,8 +43,8 @@ public class Robot extends IterativeRobot {
 	final int JoystickChannel = 0;
 	
 	//Define the actual joy sticks 
-	Joystick stick1 = new Joystick(JoystickChannel);
-	
+	Joystick stick1 = new Joystick(0);
+	Joystick stick2 = new Joystick(1);
 	//Define the robots drive train as "robotDrive"
 	RobotDrive robotDrive;
 	
@@ -159,20 +159,24 @@ public class Robot extends IterativeRobot {
 		while (isOperatorControl() && isEnabled()) { // Ensures that robot is enabled and in Teleoperated mode
 			
 			//Smooth drive code (with tangent)
-			double slow_val_x = (stick1.getX() / -2); //inverts and reduces x value
+			double slow_val_z = (stick1.getZ() / -2); //inverts and reduces x value
 			double slow_val_y = (Math.tan(stick1.getY()) * .5); //reduces y value on a tangent curve
 			
 			//Drive functions
 			if(stick1.getRawButton(1)) {
-				robotDrive.arcadeDrive(slow_val_y, slow_val_x); //smooth drive when top trigger is pressed
+				robotDrive.arcadeDrive(slow_val_y, slow_val_z); //smooth drive when top trigger is pressed
 			}else{
-				robotDrive.arcadeDrive(stick1.getY(), (stick1.getX() * -1)); //normal drive
+				robotDrive.arcadeDrive(stick1.getY(), (stick1.getZ() * -1)); //normal drive
 			}
 			
 			//Map buttons to proper pnumatic controls
-			if(stick1.getRawButton(8)) {
+			if(stick2.getRawButton(10)) { //open first switchy button
 				grip0.set(true);
 				grip1.set(false);
+			}
+			if(stick2.getRawButton(14)) { //hard close third switchy button
+				grip0.set(false);
+				grip1.set(true);
 			}
 			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
 		}
