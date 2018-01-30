@@ -3,6 +3,7 @@ package org.usfirst.frc.team3146.robot;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.ctre.phoenix.sensors.PigeonIMU;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
@@ -21,6 +22,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
  * directory.
  */
 public class Robot extends IterativeRobot {
+	//Initialize the string for storing field data
+	String gameData;
 	
 	//Define channels for drive motors 
 	final int kLeftChannel = 0;
@@ -91,6 +94,9 @@ public class Robot extends IterativeRobot {
 		//Publishes auto selector to smartdashboard
 		SmartDashboard.putData("Auto choices", chooser);
 		
+		//Retreive information from the control system
+		gameData = DriverStation.getInstance().getGameSpecificMessage();
+		
 		
 		
 		
@@ -117,6 +123,10 @@ public class Robot extends IterativeRobot {
 		//Reset and start the timer
 		timer.reset();
 		timer.start();
+		
+		//Retreive information from the control system
+		gameData = DriverStation.getInstance().getGameSpecificMessage();
+		
 	}
 
 	/**
@@ -126,13 +136,20 @@ public class Robot extends IterativeRobot {
 	public void autonomousPeriodic() {
 		switch (autoSelected) {
 		case customAuto: // Only attempts to place a single power cube
-			if(timer.get() < 2.0) {
-				robotDrive.drive(.5, 0);// A sample of how you should time out functions during auto
-			} else {
-				robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
+			if(gameData.charAt(0) == 'L') {
+				if(timer.get() < 2.0) {
+					robotDrive.drive(.5, 0);// A sample of how you should time out functions during auto
+				} else {
+					robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
+				}
+				break;
+			}else{
+				if(timer.get() < 2.0) {
+					robotDrive.drive(.5, 0);// A sample of how you should time out functions during auto
+				} else {
+					robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
+				}
 			}
-			break;
-			
 		case customAuto2: // Places one power cube and attempts to place another
 			if(timer.get() < 2.0) {
 				robotDrive.drive(.2, 0); // A sample of how you should time out functions during auto
@@ -182,8 +199,9 @@ public class Robot extends IterativeRobot {
 				grip1.set(true);
 			}
 			
-			//Publishes the smoothdrive
+			//Publish SmartDashboard values
 			SmartDashboard.putBoolean("Smooth Drive", stick1.getRawButton(1));
+			
 			
 			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
 		}
