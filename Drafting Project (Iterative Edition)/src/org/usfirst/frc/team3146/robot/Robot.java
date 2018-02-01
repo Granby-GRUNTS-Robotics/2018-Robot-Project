@@ -26,12 +26,16 @@ public class Robot extends IterativeRobot {
 	String gameData;
 	
 	//Define channels for drive motors 
-	final int kLeftChannel = 0;
-	final int kRightChannel = 1;
+	final int kLeftChannel = 1;
+	final int kRightChannel = 2;
+	final int left_slave_channel = 0;
+	final int right_slave_channel = 3;
 	
 	//Intitialize the Victor SPX motor controls
 	WPI_VictorSPX motor1 = new WPI_VictorSPX(kLeftChannel);
 	WPI_VictorSPX motor2 = new WPI_VictorSPX(kRightChannel);
+	WPI_VictorSPX left_slave_motor = new WPI_VictorSPX(left_slave_channel);
+	WPI_VictorSPX right_slave_motor = new WPI_VictorSPX(right_slave_channel);
 	
 	//Initialize pnuematic gripper
 	Solenoid grip0 = new Solenoid(1, 0);
@@ -86,6 +90,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
+		
 		// add auto options
 		chooser.addDefault("Cross Baseline", defaultAuto);
 		chooser.addObject("Single Switch Placement", customAuto);
@@ -94,10 +99,12 @@ public class Robot extends IterativeRobot {
 		//Publishes auto selector to smartdashboard
 		SmartDashboard.putData("Auto choices", chooser);
 		
-		//Retreive information from the control system
+		//Retrieve information from the control system
 		gameData = DriverStation.getInstance().getGameSpecificMessage();
 		
-		
+		//Set the other two Victor motor controllers as follow
+		right_slave_motor.follow(motor2);
+		left_slave_motor.follow(motor1);
 		
 		
 	}
@@ -145,7 +152,7 @@ public class Robot extends IterativeRobot {
 				break;
 			}else{
 				if(timer.get() < 2.0) {
-					robotDrive.drive(.5, 0);// A sample of how you should time out functions during auto
+					robotDrive.drive(0, 0);// A sample of how you should time out functions during auto
 				} else {
 					robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
 				}
@@ -180,13 +187,13 @@ public class Robot extends IterativeRobot {
 			
 			//Smooth drive code (with tangent)
 			double slow_val_z = (stick1.getZ() / -2); //inverts and reduces x value
-			double slow_val_y = (Math.tan(stick1.getY()) * .5); //reduces y value on a tangent curve
+			double slow_val_y = (Math.tan(stick1.getY()) * -.5); //reduces y value on a tangent curve
 			
 			//Drive functions
 			if(stick1.getRawButton(1)) {
 				robotDrive.arcadeDrive(slow_val_y, slow_val_z); //smooth drive when top trigger is pressed
 			}else{
-				robotDrive.arcadeDrive(stick1.getY(), (stick1.getZ() * -1)); //normal drive
+				robotDrive.arcadeDrive((stick1.getY() * -1), (stick1.getZ() * -1)); //normal drive
 			}
 			
 			//Map buttons to proper pnumatic controls
