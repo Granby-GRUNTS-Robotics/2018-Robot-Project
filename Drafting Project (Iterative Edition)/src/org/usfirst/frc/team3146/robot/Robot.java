@@ -74,11 +74,9 @@ public class Robot extends IterativeRobot {
 	//Define the timer variable
 	Timer timer = new Timer();
 	
-	//Modify variables for the smart dashboard
-	Preferences pref; //sets preference 
-	double auto_delay_value;
+	//Custom functions 
 	
-	//Custom functions
+	//Function that allows the robot to turn to a very specific degree
 	public void auto_degree_turn( double turn_degree){
 			if((initial_value - pigeon.getFusedHeading()) < (turn_degree - 1)){
 				robotDrive.drive(( 1 / (initial_value - pigeon.getFusedHeading())) + .25, 1);
@@ -113,7 +111,7 @@ public class Robot extends IterativeRobot {
 	final String customAuto2 = "Double Switch Placement";
 	String autoSelected;
 	
-	//Define "chooser" object
+	//Define "chooser" object for the smartdashboard
 	SendableChooser<String> chooser = new SendableChooser<>();
 
 	/**
@@ -124,10 +122,7 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		//Retrieve the initial Magnetometer value for teleop purposes
 		initial_value = pigeon.getFusedHeading();
-		
-		//Retrieve the delay value for auto
-		
-		
+			
 		// add auto options
 		chooser.addDefault("Cross Baseline", defaultAuto);
 		chooser.addObject("Single Switch Placement", customAuto);
@@ -159,7 +154,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-	//Retreieve the initial magnetometer value for autonomous purposes
+	//Retrieve the initial magnetometer value for autonomous purposes
 	initial_value = pigeon.getFusedHeading();	
 		
 	autoSelected = chooser.getSelected();
@@ -170,6 +165,7 @@ public class Robot extends IterativeRobot {
 		//Reset and start the timer
 		timer.reset();
 		timer.start(); 
+		
 		//Retreive information from the control system
 		gameData = DriverStation.getInstance().getGameSpecificMessage();
 		
@@ -180,8 +176,6 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-		//Check and execute the delay variable for competition
-		Timer.delay(auto_delay_value);
 		
 		switch (autoSelected) {
 		case customAuto: // Only attempts to place a single power cube
@@ -210,15 +204,15 @@ public class Robot extends IterativeRobot {
 		case defaultAuto:
 		default: // Simply crosses the baseline
 			if(timer.get() < 3) {
-				if((pigeon.getFusedHeading() - initial_value) > 1) { //if it gets off one way
-					robotDrive.drive(0.2, 0.3); //turn a bit
-				}else if((initial_value - pigeon.getFusedHeading()) > 1) { //if it gets off the other way
-					robotDrive.drive(0.2, -0.3); //turn a bit the other way
+				if((pigeon.getFusedHeading() - initial_value) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
+					robotDrive.drive(0.2, 0.3); //Turn at .3 speed in order to compensate
+				}else if((initial_value - pigeon.getFusedHeading()) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
+					robotDrive.drive(0.2, -0.3); ////Turn at .3 speed in order to compensate
 				}else{
-					robotDrive.drive(.2, 0);
+					robotDrive.drive(.2, 0);//Keep driving if nothing is thrown off.
 				}
 			}else if(timer.get() > 3){
-				auto_degree_turn(180);
+				auto_degree_turn(180); //Uses the "auto_degree_turn" function to turn to a specified angle
 			}else{
 				robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
 			}
@@ -269,7 +263,7 @@ public class Robot extends IterativeRobot {
 				grasping_motor_left.set(-1);
 				grasping_motor_right.set(-1);
 			}
-			if(stick2.getRawButton(8) == false && stick2.getRawButton(7) == false){
+			if(stick2.getRawButton(8) == false && stick2.getRawButton(7) == false){ //If nothing is pressed
 				grasping_motor_left.set(0);
 				grasping_motor_right.set(0);
 			}
