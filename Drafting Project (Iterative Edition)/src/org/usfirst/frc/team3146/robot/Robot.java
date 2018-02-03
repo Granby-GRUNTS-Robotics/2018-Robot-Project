@@ -1,8 +1,8 @@
 package org.usfirst.frc.team3146.robot;
 
+import com.ctre.CANTalon;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.ctre.phoenix.sensors.PigeonIMU;
-
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
@@ -28,12 +28,16 @@ public class Robot extends IterativeRobot {
 	//Define channels for drive motors 
 	final int kLeftChannel = 1;
 	final int kRightChannel = 2;
+	
+	//Define channels for slave motors
 	final int left_slave_channel = 0;
 	final int right_slave_channel = 3;
 	
 	//Intitialize the Victor SPX motor controls
 	WPI_VictorSPX motor1 = new WPI_VictorSPX(kLeftChannel);
 	WPI_VictorSPX motor2 = new WPI_VictorSPX(kRightChannel);
+	
+	//Initialize slave motors
 	WPI_VictorSPX left_slave_motor = new WPI_VictorSPX(left_slave_channel);
 	WPI_VictorSPX right_slave_motor = new WPI_VictorSPX(right_slave_channel);
 	
@@ -41,10 +45,15 @@ public class Robot extends IterativeRobot {
 	Solenoid grip0 = new Solenoid(1, 0);
 	Solenoid grip1 = new Solenoid(1, 1);
 	
-	//Initialize the Gyro/magnetometer "pidgy"
-	PigeonIMU pigeon = new PigeonIMU(0);
+	//Initialize the talons used for testing with the breadboard, leave this commented out
+	//CANTalon talon1 = new CANTalon(2);
+	//CANTalon talon2 = new CANTalon(3);
 	
-	double mag_val;
+	//Initialize the Gyro/magnetometer "pidgy"
+	PigeonIMU pigeon = new PigeonIMU(0); 
+	
+    //Retrieve initial magnetometer value
+	double init = pigeon.getFusedHeading(); //initial magnetometer value
 	
 	//Define channels for the joy sticks
 	final int JoystickChannel = 0;
@@ -122,6 +131,9 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
+		//Write initial magnetometer value to dashboard
+		SmartDashboard.putNumber("Magnetometer Zero Value", init);
+		
 		autoSelected = chooser.getSelected();
 		// autoSelected = SmartDashboard.getString("Auto Selector",
 		// defaultAuto);
@@ -129,8 +141,7 @@ public class Robot extends IterativeRobot {
 		
 		//Reset and start the timer
 		timer.reset();
-		timer.start();
-		
+		timer.start(); 
 		//Retreive information from the control system
 		gameData = DriverStation.getInstance().getGameSpecificMessage();
 		
@@ -167,11 +178,22 @@ public class Robot extends IterativeRobot {
 			
 		case defaultAuto:
 		default: // Simply crosses the baseline
-			if(timer.get() < 2.0) {
-				robotDrive.drive(.5, 0); // A sample of how you should time out functions during auto
+			if(timer.get() < 2) {
+				robotDrive.drive(.2, 0); // A sample of how you should time out functions during auto
+				while ((pigeon.getFusedHeading() - init) > 1.2) { //if it gets off one way
+					robotDrive.drive(0.2, 0.3); //turn a bit
+				}while ((init - pigeon.getFusedHeading()) > 1.2) { //if it gets off the other way
+					robotDrive.drive(0.2, -0.3); //turn a bit the other way
+				}
+			}else if(timer.get() > 2){
+				if((pigeon.getFusedHeading() < (init + 90) )) {
+					robotDrive.drive(0.2, 1);
+				}
 			}else {
 				robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
 			}
+			//Write magnetometer value to dashboard during auto
+			SmartDashboard.putNumber("Auto Magnetometer value", pigeon.getFusedHeading());
 			break;
 		}
 		
@@ -208,6 +230,11 @@ public class Robot extends IterativeRobot {
 			
 			//Publish SmartDashboard values
 			SmartDashboard.putBoolean("Smooth Drive", stick1.getRawButton(1));
+			
+			//Testing clause for the breadboard
+			SmartDashboard.putNumber("Compass Angle", pigeon.getFusedHeading());
+			
+			
 			
 			
 			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
