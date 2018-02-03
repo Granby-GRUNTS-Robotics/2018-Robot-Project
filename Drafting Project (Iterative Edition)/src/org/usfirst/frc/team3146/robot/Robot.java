@@ -52,9 +52,6 @@ public class Robot extends IterativeRobot {
 	//Initialize the Gyro/magnetometer "pidgy"
 	PigeonIMU pigeon = new PigeonIMU(0); 
 	
-    //Retrieve initial magnetometer value
-	double init = pigeon.getFusedHeading(); //initial magnetometer value
-	
 	//Define channels for the joy sticks
 	final int JoystickChannel = 0;
 	
@@ -115,7 +112,8 @@ public class Robot extends IterativeRobot {
 		right_slave_motor.follow(motor2);
 		left_slave_motor.follow(motor1);
 		
-		
+		//Create an empty value for the initial magnetometer angle 
+		double init;	
 	}
 
 	/**
@@ -131,6 +129,10 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
+		
+	    //Retrieve initial magnetometer value
+		double init = pigeon.getFusedHeading(); //initial magnetometer value
+		
 		//Write initial magnetometer value to dashboard
 		SmartDashboard.putNumber("Magnetometer Zero Value", init);
 		
@@ -180,23 +182,19 @@ public class Robot extends IterativeRobot {
 		default: // Simply crosses the baseline
 			if(timer.get() < 2) {
 				robotDrive.drive(.2, 0); // A sample of how you should time out functions during auto
-				while ((pigeon.getFusedHeading() - init) > 1.2) { //if it gets off one way
+				if((init - pigeon.getFusedHeading()) > 3) { //if it gets off one way
 					robotDrive.drive(0.2, 0.3); //turn a bit
-				}while ((init - pigeon.getFusedHeading()) > 1.2) { //if it gets off the other way
+				}if((pigeon.getFusedHeading() - init) > 3) { //if it gets off the other way
 					robotDrive.drive(0.2, -0.3); //turn a bit the other way
-				}
-			}else if(timer.get() > 2){
-				if((pigeon.getFusedHeading() < (init + 90) )) {
-					robotDrive.drive(0.2, 1);
 				}
 			}else {
 				robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
 			}
 			//Write magnetometer value to dashboard during auto
 			SmartDashboard.putNumber("Auto Magnetometer value", pigeon.getFusedHeading());
+			SmartDashboard.putNumber("Angle difference", (pigeon.getFusedHeading() - init) );
 			break;
 		}
-		
 	}
 
 	/**
@@ -206,7 +204,6 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 		robotDrive.setSafetyEnabled(true); 
 		while (isOperatorControl() && isEnabled()) { // Ensures that robot is enabled and in Teleoperated mode
-			
 			//Smooth drive code (with tangent)
 			double slow_val_z = (stick1.getZ() / -2); //inverts and reduces x value
 			double slow_val_y = (Math.tan(stick1.getY()) * -.5); //reduces y value on a tangent curve
@@ -233,14 +230,19 @@ public class Robot extends IterativeRobot {
 			
 			//Testing clause for the breadboard
 			SmartDashboard.putNumber("Compass Angle", pigeon.getFusedHeading());
+			SmartDashboard.putNumber("Angle difference", (pigeon.getFusedHeading() - init) );
 			
-			
+			//Update initial mag value
+			SmartDashboard.putNumber("Magnetometer Zero Value", init);
+			//Retrieve initial magnetometer value
+			double init = pigeon.getFusedHeading(); //initial magnetometer value
 			
 			
 			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
 		}
 	}
 
+	
 	
 
 	/**
