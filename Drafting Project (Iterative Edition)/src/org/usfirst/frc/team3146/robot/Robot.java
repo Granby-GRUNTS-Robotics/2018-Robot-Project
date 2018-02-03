@@ -6,12 +6,14 @@ import com.ctre.phoenix.sensors.PigeonIMU;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
 import edu.wpi.first.wpilibj.Solenoid;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.Spark;
 
 
 /**
@@ -41,9 +43,17 @@ public class Robot extends IterativeRobot {
 	WPI_VictorSPX left_slave_motor = new WPI_VictorSPX(left_slave_channel);
 	WPI_VictorSPX right_slave_motor = new WPI_VictorSPX(right_slave_channel);
 	
+	//Initialize spark motor controllers for grabber wheel motors
+	Spark grasping_motor_left = new Spark(0);
+	Spark grasping_motor_right = new Spark(1);
+	
 	//Initialize pnuematic gripper
 	Solenoid grip0 = new Solenoid(1, 0);
 	Solenoid grip1 = new Solenoid(1, 1);
+	
+	//Create empty storage values
+	double initial_value;
+	
 	
 	//Initialize the talons used for testing with the breadboard, leave this commented out
 	//CANTalon talon1 = new CANTalon(2);
@@ -63,6 +73,22 @@ public class Robot extends IterativeRobot {
 	
 	//Define the timer variable
 	Timer timer = new Timer();
+	
+	//Modify variables for the smart dashboard
+	Preferences pref; //sets preference 
+	double auto_delay_value;
+	
+	//Custom functions
+	public void auto_degree_turn( double turn_degree){
+			if((initial_value - pigeon.getFusedHeading()) < (turn_degree - 1)){
+				robotDrive.drive(( 1 / (initial_value - pigeon.getFusedHeading())) + .25, 1);
+			}else if((initial_value - pigeon.getFusedHeading()) > (turn_degree + 1)){
+				robotDrive.drive(( 1 / (initial_value - pigeon.getFusedHeading())) + .25, -1);
+			}else{
+				robotDrive.drive(0, 0);
+			}
+		}
+	
 	
 	//Starting the "Robot" function in order to define drive train and motor inversions
 	public Robot() {
@@ -96,6 +122,11 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
+		//Retrieve the initial Magnetometer value for teleop purposes
+		initial_value = pigeon.getFusedHeading();
+		
+		//Retrieve the delay value for auto
+		
 		
 		// add auto options
 		chooser.addDefault("Cross Baseline", defaultAuto);
@@ -112,8 +143,7 @@ public class Robot extends IterativeRobot {
 		right_slave_motor.follow(motor2);
 		left_slave_motor.follow(motor1);
 		
-		//Create an empty value for the initial magnetometer angle 
-		double init;	
+		
 	}
 
 	/**
@@ -129,14 +159,10 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
+	//Retreieve the initial magnetometer value for autonomous purposes
+	initial_value = pigeon.getFusedHeading();	
 		
-	    //Retrieve initial magnetometer value
-		double init = pigeon.getFusedHeading(); //initial magnetometer value
-		
-		//Write initial magnetometer value to dashboard
-		SmartDashboard.putNumber("Magnetometer Zero Value", init);
-		
-		autoSelected = chooser.getSelected();
+	autoSelected = chooser.getSelected();
 		// autoSelected = SmartDashboard.getString("Auto Selector",
 		// defaultAuto);
 		System.out.println("Auto selected: " + autoSelected);
@@ -154,6 +180,9 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
+		//Check and execute the delay variable for competition
+		Timer.delay(auto_delay_value);
+		
 		switch (autoSelected) {
 		case customAuto: // Only attempts to place a single power cube
 			if(gameData.charAt(0) == 'L') {
@@ -180,21 +209,25 @@ public class Robot extends IterativeRobot {
 			
 		case defaultAuto:
 		default: // Simply crosses the baseline
-			if(timer.get() < 2) {
-				robotDrive.drive(.2, 0); // A sample of how you should time out functions during auto
-				if((init - pigeon.getFusedHeading()) > 3) { //if it gets off one way
+			if(timer.get() < 3) {
+				if((pigeon.getFusedHeading() - initial_value) > 1) { //if it gets off one way
 					robotDrive.drive(0.2, 0.3); //turn a bit
-				}if((pigeon.getFusedHeading() - init) > 3) { //if it gets off the other way
+				}else if((initial_value - pigeon.getFusedHeading()) > 1) { //if it gets off the other way
 					robotDrive.drive(0.2, -0.3); //turn a bit the other way
+				}else{
+					robotDrive.drive(.2, 0);
 				}
-			}else {
+			}else if(timer.get() > 3){
+				auto_degree_turn(180);
+			}else{
 				robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
 			}
-			//Write magnetometer value to dashboard during auto
-			SmartDashboard.putNumber("Auto Magnetometer value", pigeon.getFusedHeading());
-			SmartDashboard.putNumber("Angle difference", (pigeon.getFusedHeading() - init) );
+			
 			break;
 		}
+		//publish the base magnetometer value to the dashboard
+		auto_delay_value = SmartDashboard.getNumber("Auto Delay Time", 0);
+		SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
 	}
 
 	/**
@@ -215,27 +248,34 @@ public class Robot extends IterativeRobot {
 				robotDrive.arcadeDrive((stick1.getY() * -1), (stick1.getZ() * -1)); //normal drive
 			}
 			
-			//Map buttons to proper pnumatic controls
-			if(stick2.getRawButton(10)) { //open first switchy button
+			//Map buttons to proper gripper functions
+			if(stick2.getRawButton(10)) { 
+				//opens the pnuematic arms on the robot
 				grip0.set(true);
 				grip1.set(false);
 			}
-			if(stick2.getRawButton(14)) { //hard close third switchy button
+			if(stick2.getRawButton(14)) { 
+				//Closes the pnuematic arms on the robot
 				grip0.set(false);
 				grip1.set(true);
 			}
-			
+			if(stick2.getRawButton(7)) { 
+				//opens the pnuematic arms on the robot
+				 grasping_motor_left.set(1);
+				 grasping_motor_right.set(1);
+			}
+			if(stick2.getRawButton(8)) { 
+				//Closes the pnuematic arms on the robot
+				grasping_motor_left.set(-1);
+				grasping_motor_right.set(-1);
+			}
+			if(stick2.getRawButton(8) == false && stick2.getRawButton(7) == false){
+				grasping_motor_left.set(0);
+				grasping_motor_right.set(0);
+			}
 			//Publish SmartDashboard values
 			SmartDashboard.putBoolean("Smooth Drive", stick1.getRawButton(1));
-			
-			//Testing clause for the breadboard
-			SmartDashboard.putNumber("Compass Angle", pigeon.getFusedHeading());
-			SmartDashboard.putNumber("Angle difference", (pigeon.getFusedHeading() - init) );
-			
-			//Update initial mag value
-			SmartDashboard.putNumber("Magnetometer Zero Value", init);
-			//Retrieve initial magnetometer value
-			double init = pigeon.getFusedHeading(); //initial magnetometer value
+			SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
 			
 			
 			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
