@@ -85,7 +85,22 @@ public class Robot extends IterativeRobot {
 			}else{
 				robotDrive.drive(0, 0);
 			}
-		}
+	}
+	
+	//Allows the robot to drive with complete directional compensation
+	//Takes 3 arguments, (initial_value, speed, and curve).
+	//Initial value = the magnetometers zero value
+	//Speed = The motor output
+	//Curve = The Gradual turn of the robot (1 is a zero point turn)
+	public void drive_drift_compensation( double initial_value, double speed, double curve ) {
+			if((pigeon.getFusedHeading() - initial_value) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
+				robotDrive.drive(speed, curve); //Turn at .3 speed in order to compensate
+			}else if((initial_value - pigeon.getFusedHeading()) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
+				robotDrive.drive(speed, -curve); ////Turn at .3 speed in order to compensate
+			}else{
+				robotDrive.drive(speed, 0);//Keep driving if nothing is thrown off.
+			}
+	}
 	
 	
 	//Starting the "Robot" function in order to define drive train and motor inversions
@@ -134,7 +149,7 @@ public class Robot extends IterativeRobot {
 		//Retrieve information from the control system
 		gameData = DriverStation.getInstance().getGameSpecificMessage();
 		
-		//Set the other two Victor motor controllers as follow
+		//Set the other two Victor motor controllers as followers to the main two
 		right_slave_motor.follow(motor2);
 		left_slave_motor.follow(motor1);
 		
@@ -204,13 +219,7 @@ public class Robot extends IterativeRobot {
 		case defaultAuto:
 		default: // Simply crosses the baseline
 			if(timer.get() < 3) {
-				if((pigeon.getFusedHeading() - initial_value) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
-					robotDrive.drive(0.2, 0.3); //Turn at .3 speed in order to compensate
-				}else if((initial_value - pigeon.getFusedHeading()) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
-					robotDrive.drive(0.2, -0.3); ////Turn at .3 speed in order to compensate
-				}else{
-					robotDrive.drive(.2, 0);//Keep driving if nothing is thrown off.
-				}
+				drive_drift_compensation(initial_value, .2, .3);
 			}else if(timer.get() > 3){
 				auto_degree_turn(180); //Uses the "auto_degree_turn" function to turn to a specified angle
 			}else{
@@ -220,7 +229,6 @@ public class Robot extends IterativeRobot {
 			break;
 		}
 		//publish the base magnetometer value to the dashboard
-		auto_delay_value = SmartDashboard.getNumber("Auto Delay Time", 0);
 		SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
 	}
 
@@ -270,7 +278,6 @@ public class Robot extends IterativeRobot {
 			//Publish SmartDashboard values
 			SmartDashboard.putBoolean("Smooth Drive", stick1.getRawButton(1));
 			SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
-			
 			
 			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
 		}
