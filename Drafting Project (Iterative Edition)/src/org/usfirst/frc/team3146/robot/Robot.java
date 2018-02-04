@@ -59,7 +59,7 @@ public class Robot extends IterativeRobot {
 	//CANTalon talon1 = new CANTalon(2);
 	//CANTalon talon2 = new CANTalon(3);
 	
-	//Initialize the Gyro/magnetometer "pidgy"
+	//Initialize the Gyro/magnetometer "pigeon"
 	PigeonIMU pigeon = new PigeonIMU(0); 
 	
 	//Define channels for the joy sticks
@@ -75,11 +75,11 @@ public class Robot extends IterativeRobot {
 	Timer timer = new Timer();
 	
 	//Modify variables for the smart dashboard
-	Preferences pref; //sets preference 
-	double auto_delay_value;
+	//Preferences pref; //sets preference 
+	//double auto_delay_value;
 	
-	//Custom functions
-	public void auto_degree_turn( double turn_degree){
+	//Custom function for turning in auto
+	public void auto_degree_turn(double turn_degree){
 			if((initial_value - pigeon.getFusedHeading()) < (turn_degree - 1)){
 				robotDrive.drive(( 1 / (initial_value - pigeon.getFusedHeading())) + .25, 1);
 			}else if((initial_value - pigeon.getFusedHeading()) > (turn_degree + 1)){
@@ -87,9 +87,18 @@ public class Robot extends IterativeRobot {
 			}else{
 				robotDrive.drive(0, 0);
 			}
+			
 		}
 	
-	
+	public void drive_drift_compensation( double initial_value, double speed, double curve, double start_angle) {
+		if((pigeon.getFusedHeading() - (initial_value - start_angle)) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
+			robotDrive.drive(speed, curve); //Turn at .3 speed in order to compensate
+		}else if((initial_value - start_angle) - pigeon.getFusedHeading() > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
+			robotDrive.drive(speed, -curve); ////Turn at .3 speed in order to compensate
+		}else{
+			robotDrive.drive(speed, 0);//Keep driving if nothing is thrown off.
+		}
+	}
 	//Starting the "Robot" function in order to define drive train and motor inversions
 	public Robot() {
 		//Robot drive
@@ -109,13 +118,22 @@ public class Robot extends IterativeRobot {
 	
 	// Define strings that are associated with different autonomous modes
 	final String defaultAuto = "Cross Baseline";
-	final String customAuto = "Single Switch Placement";
-	final String customAuto2 = "Double Switch Placement";
+	final String Single_Placement = "Single Switch Placement";
+	final String Double_Placement = "Double Switch Placement";
 	String autoSelected;
 	
-	//Define "chooser" object
+	//define string associated with different stations
+	final String left = "Left Station";
+	final String middle = "Middle Station";
+	final String right = "Right Station";
+	String stationSelected;
+	
+	//Define "chooser" object for auto selector
 	SendableChooser<String> chooser = new SendableChooser<>();
 
+	//Define "station_chooser" object for station selector
+	SendableChooser<String> station_chooser = new SendableChooser<>();
+	
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -124,17 +142,22 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		//Retrieve the initial Magnetometer value for teleop purposes
 		initial_value = pigeon.getFusedHeading();
-		
-		//Retrieve the delay value for auto
-		
-		
+	
 		// add auto options
 		chooser.addDefault("Cross Baseline", defaultAuto);
-		chooser.addObject("Single Switch Placement", customAuto);
-		chooser.addObject("Double Switch Placement", customAuto2);
-		
+		chooser.addObject("Single Switch Placement", Single_Placement);
+		chooser.addObject("Double Switch Placement", Double_Placement);
+	
+		//add station options
+		station_chooser.addDefault("Left Station", left);
+		station_chooser.addObject("Middle Station", middle);
+		station_chooser.addObject("Right Station", right);
+	
 		//Publishes auto selector to smartdashboard
 		SmartDashboard.putData("Auto choices", chooser);
+	
+		//Publishes station selector to SmartDashboard
+		SmartDashboard.putData("Driver station", station_chooser);
 		
 		//Retrieve information from the control system
 		gameData = DriverStation.getInstance().getGameSpecificMessage();
@@ -161,12 +184,13 @@ public class Robot extends IterativeRobot {
 	public void autonomousInit() {
 	//Retreieve the initial magnetometer value for autonomous purposes
 	initial_value = pigeon.getFusedHeading();	
-		
+	
 	autoSelected = chooser.getSelected();
 		// autoSelected = SmartDashboard.getString("Auto Selector",
 		// defaultAuto);
 		System.out.println("Auto selected: " + autoSelected);
 		
+	stationSelected = station_chooser.getSelected();
 		//Reset and start the timer
 		timer.reset();
 		timer.start(); 
@@ -181,55 +205,102 @@ public class Robot extends IterativeRobot {
 	@Override
 	public void autonomousPeriodic() {
 		//Check and execute the delay variable for competition
-		Timer.delay(auto_delay_value);
-		
+		//Timer.delay(auto_delay_value);
 		switch (autoSelected) {
-		case customAuto: // Only attempts to place a single power cube
-			if(gameData.charAt(0) == 'L') {
-				if(timer.get() < 2.0) {
-					robotDrive.drive(.5, 0);// A sample of how you should time out functions during auto
-				} else {
-					robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
-				}
-				break;
-			}else{
-				if(timer.get() < 2.0) {
-					robotDrive.drive(0, 0);// A sample of how you should time out functions during auto
-				} else {
-					robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
-				}
+		case Single_Placement: // Only attempts to place a single power cube
+			switch (stationSelected) {
+				case left:
+					if(gameData.charAt(0) == 'L') {
+					    if(timer.get() < 3){
+					    	drive_drift_compensation(initial_value, .3, .3, 0);
+						}else if(timer.get() < 5){
+							auto_degree_turn(90);
+						}else if(timer.get() < 7){
+							drive_drift_compensation(initial_value, .3, .3, 90);
+						}else if (timer.get() < 7.25){
+							drive_drift_compensation(initial_value, -0.1, .3,  90);
+						}else {
+							drive_drift_compensation(initial_value, 0, 0, 0);
+						}
+					}else {
+						if(timer.get() < 2) {
+							drive_drift_compensation(initial_value, .3, .3, 0);
+						}else if(timer.get() < 4){
+							auto_degree_turn(90);
+						}else if(timer.get() < 9){
+							drive_drift_compensation(initial_value, .3, .3, 90);
+						}else if(timer.get() < 11){
+							auto_degree_turn(0);
+						}else if(timer.get() < 12){
+							drive_drift_compensation(initial_value, .3, .3, 0);
+						}else if(timer.get() < 14){
+							auto_degree_turn(-90);
+						}else if(timer.get() < 15) {
+							drive_drift_compensation(initial_value, .3, .3, -90);
+						}else if(timer.get() < 16) {
+							drive_drift_compensation(initial_value, -.3, .3, -90);
+						}else {
+							drive_drift_compensation(initial_value, 0, 0, 0);
+						}
+					}
+				case middle:
+					if(gameData.charAt(0) == 'L') {
+						if(timer.get() < 2) {
+							drive_drift_compensation(initial_value, .3, .3, 0);
+						}else if (timer.get() < 4) {
+							auto_degree_turn(-90);
+						}else if(timer.get() < 7) {
+							drive_drift_compensation(initial_value, .3, .3, -90);
+						}else if(timer.get() < 9) {
+							auto_degree_turn(0);
+						}else if(timer.get() < 11) {
+							drive_drift_compensation(initial_value, .3, .3, 0);
+						}else if(timer.get() < 13) {
+							auto_degree_turn(90);
+						}
+					}else {
+						
+					}
+				case right:
+					if(gameData.charAt(0) == 'L') {
+						
+					}else {
+						
+					}
 			}
-		case customAuto2: // Places one power cube and attempts to place another
-			if(timer.get() < 2.0) {
-				robotDrive.drive(.2, 0); // A sample of how you should time out functions during auto
-			} else {
-				robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
-			}  
 			break;
+		case Double_Placement: // Places one power cube and attempts to place another
+				if(timer.get() < 2.0) {
+					robotDrive.drive(.2, 0); // A sample of how you should time out functions during auto
+				} else {
+					robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
+				}  
+				break;
 			
 		case defaultAuto:
-		default: // Simply crosses the baseline
-			if(timer.get() < 3) {
-				if((pigeon.getFusedHeading() - initial_value) > 1) { //if it gets off one way
-					robotDrive.drive(0.2, 0.3); //turn a bit
-				}else if((initial_value - pigeon.getFusedHeading()) > 1) { //if it gets off the other way
-					robotDrive.drive(0.2, -0.3); //turn a bit the other way
-				}else{
-					robotDrive.drive(.2, 0);
+			default: // Simply crosses the baseline
+				switch (stationSelected) {
+				case left:
+					if(timer.get() < 5) {
+						drive_drift_compensation(initial_value, .2, .3, 0);
+					}else{
+						robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
+					}
+					
+				case right:
+					if(timer.get() < 5) {
+						drive_drift_compensation(initial_value, .2, .3, 0);
+					}else{
+						robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
+					}
+				case middle:
+					
 				}
-			}else if(timer.get() > 3){
-				auto_degree_turn(180);
-			}else{
-				robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
-			}
-			
-			break;
+		break;
+	
+	//publish the base magnetometer value to the dashboard
+		}SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
 		}
-		//publish the base magnetometer value to the dashboard
-		auto_delay_value = SmartDashboard.getNumber("Auto Delay Time", 0);
-		SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
-	}
-
 	/**
 	 * This function is called periodically during operator control
 	 */
@@ -238,7 +309,7 @@ public class Robot extends IterativeRobot {
 		robotDrive.setSafetyEnabled(true); 
 		while (isOperatorControl() && isEnabled()) { // Ensures that robot is enabled and in Teleoperated mode
 			//Smooth drive code (with tangent)
-			double slow_val_z = (stick1.getZ() / -2); //inverts and reduces x value
+			double slow_val_z = (stick1.getZ() / -1.5); //inverts and reduces x value
 			double slow_val_y = (Math.tan(stick1.getY()) * -.5); //reduces y value on a tangent curve
 			
 			//Drive functions
