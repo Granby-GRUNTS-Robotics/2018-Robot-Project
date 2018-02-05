@@ -74,19 +74,16 @@ public class Robot extends IterativeRobot {
 	//Define the timer variable
 	Timer timer = new Timer();
 	
-<<<<<<< HEAD
+
 	//Modify variables for the smart dashboard
 	//Preferences pref; //sets preference 
 	//double auto_delay_value;
 	
-	//Custom function for turning in auto
-	public void auto_degree_turn(double turn_degree){
-=======
+	
 	//Custom functions 
 	
 	//Function that allows the robot to turn to a very specific degree
 	public void auto_degree_turn( double turn_degree){
->>>>>>> 50348a26e23f9d50d8cc31bd63558541122d4c78
 			if((initial_value - pigeon.getFusedHeading()) < (turn_degree - 1)){
 				robotDrive.drive(( 1 / (initial_value - pigeon.getFusedHeading())) + .25, 1);
 			}else if((initial_value - pigeon.getFusedHeading()) > (turn_degree + 1)){
@@ -94,27 +91,15 @@ public class Robot extends IterativeRobot {
 			}else{
 				robotDrive.drive(0, 0);
 			}
-<<<<<<< HEAD
-			
-		}
-=======
+
 	}
-	
+		
+
 	//Allows the robot to drive with complete directional compensation
 	//Takes 3 arguments, (initial_value, speed, and curve).
 	//Initial value = the magnetometers zero value
 	//Speed = The motor output
 	//Curve = The Gradual turn of the robot (1 is a zero point turn)
-	public void drive_drift_compensation( double initial_value, double speed, double curve ) {
-			if((pigeon.getFusedHeading() - initial_value) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
-				robotDrive.drive(speed, curve); //Turn at .3 speed in order to compensate
-			}else if((initial_value - pigeon.getFusedHeading()) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
-				robotDrive.drive(speed, -curve); ////Turn at .3 speed in order to compensate
-			}else{
-				robotDrive.drive(speed, 0);//Keep driving if nothing is thrown off.
-			}
-	}
->>>>>>> 50348a26e23f9d50d8cc31bd63558541122d4c78
 	
 	public void drive_drift_compensation( double initial_value, double speed, double curve, double start_angle) {
 		if((pigeon.getFusedHeading() - (initial_value - start_angle)) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
@@ -148,7 +133,7 @@ public class Robot extends IterativeRobot {
 	final String Double_Placement = "Double Switch Placement";
 	String autoSelected;
 	
-<<<<<<< HEAD
+
 	//define string associated with different stations
 	final String left = "Left Station";
 	final String middle = "Middle Station";
@@ -156,9 +141,9 @@ public class Robot extends IterativeRobot {
 	String stationSelected;
 	
 	//Define "chooser" object for auto selector
-=======
+
 	//Define "chooser" object for the smartdashboard
->>>>>>> 50348a26e23f9d50d8cc31bd63558541122d4c78
+
 	SendableChooser<String> chooser = new SendableChooser<>();
 
 	//Define "station_chooser" object for station selector
@@ -172,11 +157,7 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		//Retrieve the initial Magnetometer value for teleop purposes
 		initial_value = pigeon.getFusedHeading();
-<<<<<<< HEAD
-	
-=======
-			
->>>>>>> 50348a26e23f9d50d8cc31bd63558541122d4c78
+
 		// add auto options
 		chooser.addDefault("Cross Baseline", defaultAuto);
 		chooser.addObject("Single Switch Placement", Single_Placement);
@@ -239,12 +220,8 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
-<<<<<<< HEAD
 		//Check and execute the delay variable for competition
 		//Timer.delay(auto_delay_value);
-=======
-		
->>>>>>> 50348a26e23f9d50d8cc31bd63558541122d4c78
 		switch (autoSelected) {
 		case Single_Placement: // Only attempts to place a single power cube
 			switch (stationSelected) {
@@ -317,7 +294,6 @@ public class Robot extends IterativeRobot {
 				break;
 			
 		case defaultAuto:
-<<<<<<< HEAD
 			default: // Simply crosses the baseline
 				switch (stationSelected) {
 				case left:
@@ -336,28 +312,15 @@ public class Robot extends IterativeRobot {
 				case middle:
 					
 				}
-		break;
-	
+				break;
+		}
 	//publish the base magnetometer value to the dashboard
-		}SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
-		}
-=======
-		default: // Simply crosses the baseline
-			if(timer.get() < 3) {
-				drive_drift_compensation(initial_value, .2, .3);
-			}else if(timer.get() > 3){
-				auto_degree_turn(180); //Uses the "auto_degree_turn" function to turn to a specified angle
-			}else{
-				robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
-			}
-			
-			break;
-		}
+		SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
+
 		//publish the base magnetometer value to the dashboard
 		SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
 	}
 
->>>>>>> 50348a26e23f9d50d8cc31bd63558541122d4c78
 	/**
 	 * This function is called periodically during operator control
 	 */
