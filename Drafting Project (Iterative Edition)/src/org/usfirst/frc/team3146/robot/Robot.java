@@ -74,6 +74,9 @@ public class Robot extends IterativeRobot {
 	//Define the timer variable
 	Timer timer = new Timer();
 	
+	//Define variables for auto testing purposes 
+	boolean auto_running;
+	
 
 	//Modify variables for the smart dashboard
 	//Preferences pref; //sets preference 
@@ -225,13 +228,8 @@ public class Robot extends IterativeRobot {
 					    	drive_drift_compensation(initial_value, .3, .3, 0);
 						}else if(timer.get() < 5){
 							auto_degree_turn(90);
-						}else if(timer.get() < 7){
-							drive_drift_compensation(initial_value, .3, .3, 90);
-						}else if (timer.get() < 7.25){
-							drive_drift_compensation(initial_value, -0.1, .3,  90);
-						}else {
-							drive_drift_compensation(initial_value, 0, 0, 0);
 						}
+					    auto_running = false; 
 					}else {
 						if(timer.get() < 2) {
 							drive_drift_compensation(initial_value, .3, .3, 0);
@@ -253,6 +251,8 @@ public class Robot extends IterativeRobot {
 							drive_drift_compensation(initial_value, 0, 0, 0);
 						}
 					}
+					auto_running = false;
+					break;
 				case middle:
 					if(gameData.charAt(0) == 'L') {
 						if(timer.get() < 2) {
@@ -268,15 +268,17 @@ public class Robot extends IterativeRobot {
 						}else if(timer.get() < 13) {
 							auto_degree_turn(90);
 						}
+						auto_running = false;
 					}else {
 						
 					}
+					break;
 				case right:
 					if(gameData.charAt(0) == 'L') {
 						
 					}else {
-						
-					}
+						}
+					break;
 			}
 			break;
 		case Double_Placement: // Places one power cube and attempts to place another
@@ -296,23 +298,27 @@ public class Robot extends IterativeRobot {
 					}else{
 						robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
 					}
-					
+					break;
 				case right:
 					if(timer.get() < 5) {
 						drive_drift_compensation(initial_value, .2, .3, 0);
 					}else{
 						robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
 					}
+					break;
 				case middle:
-					
+					auto_degree_turn(90);
+					break;
 				}
 				break;
 		}
-	//publish the base magnetometer value to the dashboard
-		SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
 
 		//publish the base magnetometer value to the dashboard
 		SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
+		
+		//Indicates if the correct value is running
+		SmartDashboard.putBoolean("Correct Auto Running", auto_running);
+		
 	}
 
 	/**
