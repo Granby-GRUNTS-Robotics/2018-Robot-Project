@@ -91,10 +91,8 @@ public class Robot extends IterativeRobot {
 			}else{
 				robotDrive.drive(0, 0);
 			}
-
 	}
 		
-
 	//Allows the robot to drive with complete directional compensation
 	//Takes 3 arguments, (initial_value, speed, and curve).
 	//Initial value = the magnetometers zero value
@@ -121,7 +119,6 @@ public class Robot extends IterativeRobot {
 		
 		//motor2.setInverted(true);
 		//motor1.setInverted(true);
-		
 		
 		//Swap the axis channels
 		
@@ -180,8 +177,6 @@ public class Robot extends IterativeRobot {
 		//Set the other two Victor motor controllers as followers to the main two
 		right_slave_motor.follow(motor2);
 		left_slave_motor.follow(motor1);
-		
-		
 	}
 
 	/**
@@ -212,7 +207,6 @@ public class Robot extends IterativeRobot {
 		
 		//Retreive information from the control system
 		gameData = DriverStation.getInstance().getGameSpecificMessage();
-		
 	}
 
 	/**
@@ -371,9 +365,6 @@ public class Robot extends IterativeRobot {
 			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
 		}
 	}
-
-	
-	
 
 	/**
 	 * This function is called periodically during test mode
