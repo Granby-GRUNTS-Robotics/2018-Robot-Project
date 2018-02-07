@@ -219,99 +219,88 @@ public class Robot extends IterativeRobot {
 	public void autonomousPeriodic() {
 		//Check and execute the delay variable for competition
 		//Timer.delay(auto_delay_value);
-		switch (autoSelected) {
-		case Single_Placement: // Only attempts to place a single power cube
-			switch (stationSelected) {
-				case left:
-					if(gameData.charAt(0) == 'L') {
-					    if(timer.get() < 3){
-					    	drive_drift_compensation(initial_value, .3, .3, 0);
-						}else if(timer.get() < 5){
-							auto_degree_turn(90);
-						}
-					    auto_running = false; 
-					}else {
-						if(timer.get() < 2) {
-							drive_drift_compensation(initial_value, .3, .3, 0);
-						}else if(timer.get() < 4){
-							auto_degree_turn(90);
-						}else if(timer.get() < 9){
-							drive_drift_compensation(initial_value, .3, .3, 90);
-						}else if(timer.get() < 11){
-							auto_degree_turn(0);
-						}else if(timer.get() < 12){
-							drive_drift_compensation(initial_value, .3, .3, 0);
-						}else if(timer.get() < 14){
-							auto_degree_turn(-90);
-						}else if(timer.get() < 15) {
-							drive_drift_compensation(initial_value, .3, .3, -90);
-						}else if(timer.get() < 16) {
-							drive_drift_compensation(initial_value, -.3, .3, -90);
-						}else {
-							drive_drift_compensation(initial_value, 0, 0, 0);
-						}
-					}
-					auto_running = false;
-					break;
-				case middle:
-					if(gameData.charAt(0) == 'L') {
-						if(timer.get() < 2) {
-							drive_drift_compensation(initial_value, .3, .3, 0);
-						}else if (timer.get() < 4) {
-							auto_degree_turn(-90);
-						}else if(timer.get() < 7) {
-							drive_drift_compensation(initial_value, .3, .3, -90);
-						}else if(timer.get() < 9) {
-							auto_degree_turn(0);
-						}else if(timer.get() < 11) {
-							drive_drift_compensation(initial_value, .3, .3, 0);
-						}else if(timer.get() < 13) {
-							auto_degree_turn(90);
-						}
-						auto_running = false;
-					}else {
-						
-					}
-					break;
-				case right:
-					if(gameData.charAt(0) == 'L') {
-						
-					}else {
-						}
-					break;
-			}
-			break;
-		case Double_Placement: // Places one power cube and attempts to place another
-				if(timer.get() < 2.0) {
-					robotDrive.drive(.2, 0); // A sample of how you should time out functions during auto
-				} else {
-					robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
-				}  
-				break;
+		switch (autoSelected){
+		//Auto to place a single cube on the switch
+		case Single_Placement:
 			
-		case defaultAuto:
-			default: // Simply crosses the baseline
-				switch (stationSelected) {
-				case left:
-					if(timer.get() < 5) {
-						drive_drift_compensation(initial_value, .2, .3, 0);
-					}else{
-						robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
+			//Reads dashboard indication of what driverstation the robot is starting from 
+			switch(stationSelected){
+			
+			case left:
+				if(gameData.charAt(0) == 'L'){
+					//Executes only when the switch is on the left
+					if(timer.get() < 2) {
+						drive_drift_compensation(initial_value, .3, .3, 0);
+					}else if(timer.get() < 4){
+						auto_degree_turn(90);
+					}else if(timer.get() < 9){
+						drive_drift_compensation(initial_value, .3, .3, 90);
+					}else if(timer.get() < 11){
+						auto_degree_turn(0);
+					}else if(timer.get() < 12){
+						drive_drift_compensation(initial_value, .3, .3, 0);
+					}else if(timer.get() < 14){
+						auto_degree_turn(-90);
+					}else if(timer.get() < 15) {
+						drive_drift_compensation(initial_value, .3, .3, -90);
+					}else if(timer.get() < 16) {
+						drive_drift_compensation(initial_value, -.3, .3, -90);
+					}else {
+						drive_drift_compensation(initial_value, 0, 0, 0);
 					}
-					break;
-				case right:
-					if(timer.get() < 5) {
-						drive_drift_compensation(initial_value, .2, .3, 0);
-					}else{
-						robotDrive.drive(0, 0); // Stops the robot by setting motor speed to zero
-					}
-					break;
-				case middle:
-					auto_degree_turn(90);
-					break;
+				}else{ 
+					//Executes only when switch is on the right
+					
 				}
 				break;
+				
+				
+			case middle:
+				if(gameData.charAt(0) == 'L'){
+					//Executes if the switch is on the left
+					if(timer.get() < 2) {
+						drive_drift_compensation(initial_value, .3, .3, 0);
+					}else if (timer.get() < 4) {
+						auto_degree_turn(-90);
+					}else if(timer.get() < 7) {
+						drive_drift_compensation(initial_value, .3, .3, -90);
+					}else if(timer.get() < 9) {
+						auto_degree_turn(0);
+					}else if(timer.get() < 11) {
+						drive_drift_compensation(initial_value, .3, .3, 0);
+					}else if(timer.get() < 13) {
+						auto_degree_turn(90);
+					}
+				}else{
+					//Executes only when the switch is on the right
+					
+				}
+				break;
+				
+			
+			case right:
+				if(gameData.charAt(0) == 'L'){
+					//Executes if the switch is on the left
+					
+				}else{
+					//Executes if the switch is on the right
+					
+				}
+				break;
+			}
+			
+			default:
+				break;
+		
+		//Auto to place a single power cube on thew switch, and try for a second one
+		case Double_Placement:
+			
+		//Emergency auto (just drives forward)
+		case defaultAuto:
+			//Read input from dashboard values, 
+			
 		}
+		
 
 		//publish the base magnetometer value to the dashboard
 		SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
