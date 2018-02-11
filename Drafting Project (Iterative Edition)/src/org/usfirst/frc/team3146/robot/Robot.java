@@ -1,11 +1,18 @@
 package org.usfirst.frc.team3146.robot;
 
 import com.ctre.CANTalon;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.ctre.phoenix.sensors.PigeonIMU;
+
+import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.CounterBase.EncodingType;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PWM;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
@@ -14,6 +21,7 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Spark;
+import edu.wpi.first.wpilibj.Talon;
 
 
 /**
@@ -30,14 +38,20 @@ public class Robot extends IterativeRobot {
 	//Define channels for drive motors 
 	final int kLeftChannel = 1;
 	final int kRightChannel = 2;
+	final int kLiftMotorChannel = 5;
 	
 	//Define channels for slave motors
-	final int left_slave_channel = 0;
+	final int left_slave_channel = 4;
 	final int right_slave_channel = 3;
+	
+	//Initialize the encoders
+	AnalogInput lift_measure = new AnalogInput(2);
+	Encoder wheel_counter1 = new Encoder(1, 0, false, EncodingType.k4X);
 	
 	//Intitialize the Victor SPX motor controls
 	WPI_VictorSPX motor1 = new WPI_VictorSPX(kLeftChannel);
 	WPI_VictorSPX motor2 = new WPI_VictorSPX(kRightChannel);
+	WPI_TalonSRX lift_screw_motor = new WPI_TalonSRX(kLiftMotorChannel);
 	
 	//Initialize slave motors
 	WPI_VictorSPX left_slave_motor = new WPI_VictorSPX(left_slave_channel);
@@ -53,7 +67,9 @@ public class Robot extends IterativeRobot {
 	
 	//Create empty storage values
 	double initial_value;
-	
+	double compass_value;
+	double lift_value;
+
 	
 	//Initialize the talons used for testing with the breadboard, leave this commented out
 	//CANTalon talon1 = new CANTalon(2);
@@ -71,26 +87,42 @@ public class Robot extends IterativeRobot {
 	//Define the robots drive train as "robotDrive"
 	RobotDrive robotDrive;
 	
-	//Define the timer variable
+	//Define the timer variables
 	Timer timer = new Timer();
+	
 	
 	//Define variables for auto testing purposes 
 	boolean auto_running;
 	
+	// Define strings that are associated with different autonomous modes
+	final String defaultAuto = "Cross Baseline";
+	final String Single_Placement = "Single Switch Placement";
+	final String Double_Placement = "Double Switch Placement";
+	String autoSelected;
+		
 
-	//Modify variables for the smart dashboard
-	//Preferences pref; //sets preference 
-	//double auto_delay_value;
+	//define string associated with different stations
+	final String left = "Left Station";
+	final String middle = "Middle Station";
+	final String right = "Right Station";
+	String stationSelected;
 	
+	//Define "chooser" object for auto selector
+	//Define "chooser" object for the smartdashboard
+	SendableChooser<String> chooser = new SendableChooser<>();
+	//Define "station_chooser" object for station selector
+	SendableChooser<String> station_chooser = new SendableChooser<>();
+	
+	double auto_delay_value;
 	
 	//Custom functions 
 	
 	//Function that allows the robot to turn to a very specific degree
 	public void auto_degree_turn( double turn_degree){
-			if((initial_value - pigeon.getFusedHeading()) < (turn_degree - 1)){
-				robotDrive.drive(( 1 / (initial_value - pigeon.getFusedHeading())) + .25, 1);
-			}else if((initial_value - pigeon.getFusedHeading()) > (turn_degree + 1)){
-				robotDrive.drive(( 1 / (initial_value - pigeon.getFusedHeading())) + .25, -1);
+			if((initial_value - pigeon.getFusedHeading()) < (turn_degree - 2)){
+				robotDrive.drive(( 1 / (initial_value - pigeon.getFusedHeading() + 10) + .25), 1);
+			}else if((initial_value - pigeon.getFusedHeading()) > (turn_degree + 2)){
+				robotDrive.drive(( 1 / (initial_value - Math.abs(pigeon.getFusedHeading()) + 10) + .25), -1);
 			}else{
 				robotDrive.drive(0, 0);
 			}
@@ -103,6 +135,7 @@ public class Robot extends IterativeRobot {
 	//Curve = The Gradual turn of the robot (1 is a zero point turn)
 	
 	public void drive_drift_compensation( double initial_value, double speed, double curve, double start_angle) {
+		
 		if((pigeon.getFusedHeading() - (initial_value - start_angle)) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
 			robotDrive.drive(speed, curve); //Turn at .3 speed in order to compensate
 		}else if((initial_value - start_angle) - pigeon.getFusedHeading() > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
@@ -110,6 +143,7 @@ public class Robot extends IterativeRobot {
 		}else{
 			robotDrive.drive(speed, 0);//Keep driving if nothing is thrown off.
 		}
+		
 	}
 	//Starting the "Robot" function in order to define drive train and motor inversions
 	public Robot() {
@@ -127,28 +161,6 @@ public class Robot extends IterativeRobot {
 		
 	}
 	
-	// Define strings that are associated with different autonomous modes
-	final String defaultAuto = "Cross Baseline";
-	final String Single_Placement = "Single Switch Placement";
-	final String Double_Placement = "Double Switch Placement";
-	String autoSelected;
-	
-
-	//define string associated with different stations
-	final String left = "Left Station";
-	final String middle = "Middle Station";
-	final String right = "Right Station";
-	String stationSelected;
-	
-	//Define "chooser" object for auto selector
-
-	//Define "chooser" object for the smartdashboard
-
-	SendableChooser<String> chooser = new SendableChooser<>();
-
-	//Define "station_chooser" object for station selector
-	SendableChooser<String> station_chooser = new SendableChooser<>();
-	
 	/**
 	 * This function is run when the robot is first started up and should be
 	 * used for any initialization code.
@@ -157,7 +169,10 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		//Retrieve the initial Magnetometer value for teleop purposes
 		initial_value = pigeon.getFusedHeading();
-
+		
+		//Reset Encoder values
+		wheel_counter1.reset();
+		
 		// add auto options
 		chooser.addDefault("Cross Baseline", defaultAuto);
 		chooser.addObject("Single Switch Placement", Single_Placement);
@@ -180,6 +195,7 @@ public class Robot extends IterativeRobot {
 		//Set the other two Victor motor controllers as followers to the main two
 		right_slave_motor.follow(motor2);
 		left_slave_motor.follow(motor1);
+	
 	}
 
 	/**
@@ -195,21 +211,25 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-	//Retrieve the initial magnetometer value for autonomous purposes
-	initial_value = pigeon.getFusedHeading();	
-	
-	autoSelected = chooser.getSelected();
-		// autoSelected = SmartDashboard.getString("Auto Selector",
-		// defaultAuto);
-		System.out.println("Auto selected: " + autoSelected);
+		//Retrieve the initial magnetometer value for autonomous purposes
+		initial_value = pigeon.getFusedHeading();	
 		
-	stationSelected = station_chooser.getSelected();
+		//Retrieve values from the auto selector and publish values
+		autoSelected = chooser.getSelected();
+		auto_delay_value = SmartDashboard.getNumber("Delay Value", 0);
+		System.out.println("Auto selected: " + autoSelected);
+			
+		stationSelected = station_chooser.getSelected();
+		
 		//Reset and start the timer
 		timer.reset();
 		timer.start(); 
-		
+			
 		//Retreive information from the control system
 		gameData = DriverStation.getInstance().getGameSpecificMessage();
+		
+		//Reset encoder values
+		wheel_counter1.reset();
 	}
 
 	/**
@@ -217,96 +237,252 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousPeriodic() {
+		//Declare updated value
+		compass_value = (initial_value - pigeon.getFusedHeading());
+		
+		
 		//Check and execute the delay variable for competition
 		//Timer.delay(auto_delay_value);
-		switch (autoSelected){
-		//Auto to place a single cube on the switch
-		case Single_Placement:
-			
-			//Reads dashboard indication of what driverstation the robot is starting from 
-			switch(stationSelected){
-			
-			case left:
-				if(gameData.charAt(0) == 'L'){
-					//Executes only when the switch is on the left
-					if(timer.get() < 2) {
-						drive_drift_compensation(initial_value, .3, .3, 0);
-					}else if(timer.get() < 4){
-						auto_degree_turn(90);
-					}else if(timer.get() < 9){
-						drive_drift_compensation(initial_value, .3, .3, 90);
-					}else if(timer.get() < 11){
-						auto_degree_turn(0);
-					}else if(timer.get() < 12){
-						drive_drift_compensation(initial_value, .3, .3, 0);
-					}else if(timer.get() < 14){
-						auto_degree_turn(-90);
-					}else if(timer.get() < 15) {
-						drive_drift_compensation(initial_value, .3, .3, -90);
-					}else if(timer.get() < 16) {
-						drive_drift_compensation(initial_value, -.3, .3, -90);
-					}else {
-						drive_drift_compensation(initial_value, 0, 0, 0);
-					}
-				}else{ 
-					//Executes only when switch is on the right
-					
-				}
-				break;
-				
-				
-			case middle:
-				if(gameData.charAt(0) == 'L'){
-					//Executes if the switch is on the left
-					if(timer.get() < 2) {
-						drive_drift_compensation(initial_value, .3, .3, 0);
-					}else if (timer.get() < 4) {
-						auto_degree_turn(-90);
-					}else if(timer.get() < 7) {
-						drive_drift_compensation(initial_value, .3, .3, -90);
-					}else if(timer.get() < 9) {
-						auto_degree_turn(0);
-					}else if(timer.get() < 11) {
-						drive_drift_compensation(initial_value, .3, .3, 0);
-					}else if(timer.get() < 13) {
-						auto_degree_turn(90);
-					}
-				}else{
-					//Executes only when the switch is on the right
-					
-				}
-				break;
-				
-			
-			case right:
-				if(gameData.charAt(0) == 'L'){
-					//Executes if the switch is on the left
-					
-				}else{
+		if(autoSelected == Single_Placement){
+			//Attempts to place a single power cube on the switch
+			if(stationSelected == left){
+				//Executes when the robot is placed in front of the left station
+				if(gameData.charAt(0) == 'L') {
 					//Executes if the switch is on the right
+					if(timer.get() < 2) {
+						drive_drift_compensation(initial_value, .3, .3, 0);
+					}
 					
+					if(timer.get() < 5 && timer.get() > 2){
+						auto_degree_turn(90);
+					}
+					
+					if(timer.get() < 7 && timer.get() > 5){
+						drive_drift_compensation(initial_value, .3, .3, 90);
+					}
+					
+				    
+				}else{
+					//Executes if the switch is on the left
+					if(timer.get() < 2) {
+						drive_drift_compensation(initial_value, .3, .3, 0);
+					}
+					
+					if(timer.get() < 4 && timer.get() > 2 ){
+						auto_degree_turn(90);
+					}
+					
+					if(timer.get() < 9 && timer.get() > 4){
+						drive_drift_compensation(initial_value, .3, .3, 90);
+					} 
+					
+					if(timer.get() < 11 && timer.get() > 9){
+						auto_degree_turn(0);
+					} 
+					
+					if(timer.get() < 12 && timer.get() > 11){
+						drive_drift_compensation(initial_value, .3, .3, 0);
+					}
+					
+					if(timer.get() < 14 && timer.get() > 12){
+						auto_degree_turn(-90);
+					}
+					
+					if(timer.get() < 15 && timer.get() > 14) {
+						drive_drift_compensation(initial_value, .3, .3, -90);
+					}
+					
+					if(timer.get() < 16 && timer.get() > 15) {
+						drive_drift_compensation(initial_value, -.3, .3, -90);
+					}
 				}
-				break;
+			}else if(stationSelected == right){
+				//Executes when the robot is placed in front of the right station
+				if(gameData.charAt(0) == 'L') {
+					if(timer.get() < 2) {
+						drive_drift_compensation(initial_value, .3, .3, 0);
+					}
+					if(timer.get() < 4 && timer.get() > 2){
+						auto_degree_turn(-90);
+					}
+					if(timer.get() < 9 && timer.get() > 4){
+						drive_drift_compensation(initial_value, .3, .3, -90);
+					}
+					if(timer.get() < 11 && timer.get() > 9){
+						auto_degree_turn(0);
+					}
+					if(timer.get() < 12 && timer.get() > 11){
+						drive_drift_compensation(initial_value, .3, .3, 0);
+					}
+					if(timer.get() < 14 && timer.get() > 12){
+						auto_degree_turn(90);
+					}
+					if(timer.get() < 15 && timer.get() > 14) {
+						drive_drift_compensation(initial_value, .3, .3, 90);
+					}
+					if(timer.get() < 16 && timer.get() > 15) {
+						drive_drift_compensation(initial_value, -.3, .3, 90);
+					}
+				}else{
+					if(timer.get() < 3){
+				    	drive_drift_compensation(initial_value, .3, .3, 0);
+					}
+					if(timer.get() < 5 && timer.get() > 3){
+						auto_degree_turn(-90);
+					}
+					if(timer.get() < 7 && timer.get() > 5){
+						drive_drift_compensation(initial_value, .3, .3, -90);
+					}
+					if (timer.get() < 7.25  && timer.get() > 7){
+						drive_drift_compensation(initial_value, -0.1, .3,  -90);
+					}
+				}
+				
+			}else{
+				//Executes when the robot is placed in front of the middle station
+				if(gameData.charAt(0) == 'L'){
+					if(timer.get() < 2 && timer.get() > 0){
+						if(wheel_counter1.getDistance()  < 1500){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 1800){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 3.5 && timer.get() > 2) {
+						auto_degree_turn(90);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 6.5 && timer.get() > 3.5){
+						if(wheel_counter1.getDistance()  < 5400){
+						    drive_drift_compensation(initial_value, .4, .3, 90);
+						}else if(wheel_counter1.getDistance() > 5700){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 8 && timer.get() > 6.5) {
+						auto_degree_turn(0);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 12 && timer.get() > 8) {
+						if(wheel_counter1.getDistance()  < 8000){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 8300){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 15 && timer.get() > 12) {
+						auto_degree_turn(-90);
+						wheel_counter1.reset();
+					}
+				}else{
+					if(timer.get() < 2 && timer.get() > 0){
+						if(wheel_counter1.getDistance()  < 1500){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 1800){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 3.5 && timer.get() > 2) {
+						auto_degree_turn(-90);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 6.5 && timer.get() > 3.5){
+						if(wheel_counter1.getDistance()  < 5400){
+						    drive_drift_compensation(initial_value, .4, .3, -90);
+						}else if(wheel_counter1.getDistance() > 5700){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 8 && timer.get() > 6.5) {
+						auto_degree_turn(0);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 12 && timer.get() > 8) {
+						if(wheel_counter1.getDistance()  < 8000){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 8300){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 15 && timer.get() > 12) {
+						auto_degree_turn(90);
+						wheel_counter1.reset();
+					}
+				}
 			}
-			
-			default:
-				break;
-		
-		//Auto to place a single power cube on thew switch, and try for a second one
-		case Double_Placement:
-			
-		//Emergency auto (just drives forward)
-		case defaultAuto:
-			//Read input from dashboard values, 
-			
+		}else if(autoSelected == Double_Placement){
+			//Places a single power cube on the switch, and attempts to retrieve and place a second
+			if(stationSelected == left){
+				//Executes when the robot is placed in front of the left station
+			}else if(stationSelected == right){
+				//Executes when the robot is placed in front of the right station
+			}else{
+				//Executes when the robot is placed in front of the middle station
+			}
+		}else{
+			//Only used in emergencies, simply crosses the baseline
+			if(stationSelected == left){
+				//Executes when the robot is placed in front of the left station
+				if(wheel_counter1.getDistance()  < 7000){
+			    	drive_drift_compensation(initial_value, .4, .3, 0);
+				}else if(wheel_counter1.getDistance() > 7300){
+					robotDrive.drive(-.15, 0);
+				}
+			}else if(stationSelected == right){
+				//Executes when the robot is placed in front of the left station\
+				//Executes when the robot is placed in front of the left station
+				if(wheel_counter1.getDistance()  < 7000){
+			    	drive_drift_compensation(initial_value, .4, .3, 0);
+				}else if(wheel_counter1.getDistance() > 7300){
+					robotDrive.drive(-.15, 0);
+				}
+			}else if(stationSelected == middle){
+				//Executes when the robot is placed in front of the left station\
+				if(timer.get() < 2 && timer.get() > 0){
+					if(wheel_counter1.getDistance()  < 1500){
+					    drive_drift_compensation(initial_value, .4, .3, 0);
+					}else if(wheel_counter1.getDistance() > 1800){
+						robotDrive.drive(-.15, 0);
+					}
+				}
+				if(timer.get() < 3.5 && timer.get() > 2) {
+					auto_degree_turn(90);
+					wheel_counter1.reset();
+				}
+				if(timer.get() < 6.5 && timer.get() > 3.5){
+					if(wheel_counter1.getDistance()  < 5400){
+					    drive_drift_compensation(initial_value, .4, .3, 90);
+					}else if(wheel_counter1.getDistance() > 5700){
+						robotDrive.drive(-.15, 0);
+					}
+				}
+				if(timer.get() < 8 && timer.get() > 6.5) {
+					auto_degree_turn(0);
+					wheel_counter1.reset();
+				}
+				if(timer.get() < 12 && timer.get() > 8) {
+					if(wheel_counter1.getDistance()  < 8000){
+					    drive_drift_compensation(initial_value, .4, .3, 0);
+					}else if(wheel_counter1.getDistance() > 8300){
+						robotDrive.drive(-.15, 0);
+					}
+				}
+				if(timer.get() < 15 && timer.get() > 12) {
+					auto_degree_turn(-90);
+					wheel_counter1.reset();
+				}
+
+			}
 		}
 		
-
 		//publish the base magnetometer value to the dashboard
-		SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
+		SmartDashboard.putNumber("Compass Variance", compass_value);
+		SmartDashboard.putNumber("Encoder Value", wheel_counter1.getDistance());
 		
-		//Indicates if the correct value is running
-		SmartDashboard.putBoolean("Correct Auto Running", auto_running);
+		//Reset Pigeon IMU value
+		if(pigeon.getFusedHeading() > 360) {
+			compass_value = 0;
+		}
 		
 	}
 
@@ -320,6 +496,10 @@ public class Robot extends IterativeRobot {
 			//Smooth drive code (with tangent)
 			double slow_val_z = (stick1.getZ() / -1.5); //inverts and reduces x value
 			double slow_val_y = (Math.tan(stick1.getY()) * -.5); //reduces y value on a tangent curve
+			
+			//Assign compass value and lift value
+			compass_value = (initial_value - pigeon.getFusedHeading());
+			lift_value = (Math.abs(lift_measure.getAverageValue() - 442));
 			
 			//Drive functions
 			if(stick1.getRawButton(1)) {
@@ -349,15 +529,30 @@ public class Robot extends IterativeRobot {
 				grasping_motor_left.set(-1);
 				grasping_motor_right.set(-1);
 			}
-			if(stick2.getRawButton(8) == false && stick2.getRawButton(7) == false){ //If nothing is pressed
+			if(stick2.getRawButton(7) == false && stick2.getRawButton(8) == false){ //If nothing is pressed
 				grasping_motor_left.set(0);
 				grasping_motor_right.set(0);
 			}
+			if(stick1.getRawButton(8)) {
+				lift_screw_motor.set(1);
+			}else {
+				lift_screw_motor.set(0);
+			}
+			
 			//Publish SmartDashboard values
 			SmartDashboard.putBoolean("Smooth Drive", stick1.getRawButton(1));
-			SmartDashboard.putNumber("Compass Variance", (initial_value - pigeon.getFusedHeading()));
+			SmartDashboard.putNumber("Compass Variance", compass_value);
+			SmartDashboard.putNumber("Lift Angle", lift_value);
+			SmartDashboard.putNumber("Encoder Value", wheel_counter1.getDistance());
 			
 			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
+			
+			//Reset Pigeon IMU value
+			if(pigeon.getFusedHeading() > 360) {
+				compass_value = 0;
+			}
+			
+			
 		}
 	}
 
@@ -366,5 +561,6 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void testPeriodic() {
+		
 	}
 }
