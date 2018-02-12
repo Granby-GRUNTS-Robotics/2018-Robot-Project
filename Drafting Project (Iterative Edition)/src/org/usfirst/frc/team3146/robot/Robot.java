@@ -67,6 +67,7 @@ public class Robot extends IterativeRobot {
 	
 	//Create empty storage values
 	double initial_value;
+	
 	double compass_value;
 	double lift_value;
 
@@ -76,7 +77,7 @@ public class Robot extends IterativeRobot {
 	//CANTalon talon2 = new CANTalon(3);
 	
 	//Initialize the Gyro/magnetometer "pigeon"
-	PigeonIMU pigeon = new PigeonIMU(0); 
+	PigeonIMU pigeon = new PigeonIMU(0);
 	
 	//Define channels for the joy sticks
 	final int JoystickChannel = 0;
@@ -84,6 +85,7 @@ public class Robot extends IterativeRobot {
 	//Define the actual joy sticks 
 	Joystick stick1 = new Joystick(0);
 	Joystick stick2 = new Joystick(1);
+	
 	//Define the robots drive train as "robotDrive"
 	RobotDrive robotDrive;
 	
@@ -107,13 +109,11 @@ public class Robot extends IterativeRobot {
 	final String right = "Right Station";
 	String stationSelected;
 	
+	
 	//Define "chooser" object for auto selector
-	//Define "chooser" object for the smartdashboard
 	SendableChooser<String> chooser = new SendableChooser<>();
 	//Define "station_chooser" object for station selector
 	SendableChooser<String> station_chooser = new SendableChooser<>();
-	
-	double auto_delay_value;
 	
 	//Custom functions 
 	
@@ -128,12 +128,12 @@ public class Robot extends IterativeRobot {
 			}
 	}
 		
+	
 	//Allows the robot to drive with complete directional compensation
 	//Takes 3 arguments, (initial_value, speed, and curve).
 	//Initial value = the magnetometers zero value
 	//Speed = The motor output
 	//Curve = The Gradual turn of the robot (1 is a zero point turn)
-	
 	public void drive_drift_compensation( double initial_value, double speed, double curve, double start_angle) {
 		
 		if((pigeon.getFusedHeading() - (initial_value - start_angle)) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
@@ -145,6 +145,7 @@ public class Robot extends IterativeRobot {
 		}
 		
 	}
+	
 	//Starting the "Robot" function in order to define drive train and motor inversions
 	public Robot() {
 		//Robot drive
@@ -156,9 +157,6 @@ public class Robot extends IterativeRobot {
 		
 		//motor2.setInverted(true);
 		//motor1.setInverted(true);
-		
-		//Swap the axis channels
-		
 	}
 	
 	/**
@@ -216,12 +214,13 @@ public class Robot extends IterativeRobot {
 		
 		//Retrieve values from the auto selector and publish values
 		autoSelected = chooser.getSelected();
-		auto_delay_value = SmartDashboard.getNumber("Delay Value", 0);
+	//	auto_delay_value = SmartDashboard.getNumber("Delay Value", 0);
 		System.out.println("Auto selected: " + autoSelected);
 			
 		stationSelected = station_chooser.getSelected();
 		
-		//Reset and start the timer
+		//Reset and start the timer\
+		
 		timer.reset();
 		timer.start(); 
 			
@@ -499,7 +498,7 @@ public class Robot extends IterativeRobot {
 			
 			//Assign compass value and lift value
 			compass_value = (initial_value - pigeon.getFusedHeading());
-			lift_value = (Math.abs(lift_measure.getAverageValue() - 442));
+			lift_value = (Math.abs(lift_measure.getAverageValue() - 436));
 			
 			//Drive functions
 			if(stick1.getRawButton(1)) {
@@ -512,12 +511,17 @@ public class Robot extends IterativeRobot {
 			if(stick2.getRawButton(10)) { 
 				//opens the pnuematic arms on the robot
 				grip0.set(true);
+				grip1.set(true);
+			}
+			else if(stick2.getRawButton(12)) { 
+				//Closes the pnuematic arms on the robot - soft
+				grip0.set(true);
 				grip1.set(false);
 			}
-			if(stick2.getRawButton(14)) { 
-				//Closes the pnuematic arms on the robot
+			else if(stick2.getRawButton(14)) { 
+				//Closes the pnuematic arms on the robot - hard
 				grip0.set(false);
-				grip1.set(true);
+				grip1.set(false);
 			}
 			if(stick2.getRawButton(7)) { 
 				//opens the pnuematic arms on the robot
@@ -533,12 +537,6 @@ public class Robot extends IterativeRobot {
 				grasping_motor_left.set(0);
 				grasping_motor_right.set(0);
 			}
-			if(stick1.getRawButton(8)) {
-				lift_screw_motor.set(1);
-			}else {
-				lift_screw_motor.set(0);
-			}
-			
 			//Publish SmartDashboard values
 			SmartDashboard.putBoolean("Smooth Drive", stick1.getRawButton(1));
 			SmartDashboard.putNumber("Compass Variance", compass_value);
