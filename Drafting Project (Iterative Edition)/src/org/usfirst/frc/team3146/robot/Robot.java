@@ -1,6 +1,7 @@
 package org.usfirst.frc.team3146.robot;
 
 import com.ctre.CANTalon;
+
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.ctre.phoenix.sensors.PigeonIMU;
@@ -248,92 +249,102 @@ public class Robot extends IterativeRobot {
 				//Executes when the robot is placed in front of the left station
 				if(gameData.charAt(0) == 'L') {
 					//Executes if the switch is on the right
-					if(timer.get() < 2) {
-						drive_drift_compensation(initial_value, .3, .3, 0);
+					if(timer.get() < 4 && timer.get() > 0) {
+						if(wheel_counter1.getDistance()  < 7000){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 7300){
+							robotDrive.drive(-.15, 0);
+						}
 					}
-					
-					if(timer.get() < 5 && timer.get() > 2){
+					if(timer.get() < 6 && timer.get() > 4) {
 						auto_degree_turn(90);
-					}
-					
-					if(timer.get() < 7 && timer.get() > 5){
-						drive_drift_compensation(initial_value, .3, .3, 90);
+						wheel_counter1.reset();
 					}
 					
 				    
 				}else{
 					//Executes if the switch is on the left
-					if(timer.get() < 2) {
-						drive_drift_compensation(initial_value, .3, .3, 0);
+					if(timer.get() < 2 && timer.get() > 0){
+						if(wheel_counter1.getDistance()  < 1500){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 1800){
+							robotDrive.drive(-.15, 0);
+						}
 					}
-					
-					if(timer.get() < 4 && timer.get() > 2 ){
-						auto_degree_turn(90);
-					}
-					
-					if(timer.get() < 9 && timer.get() > 4){
-						drive_drift_compensation(initial_value, .3, .3, 90);
-					} 
-					
-					if(timer.get() < 11 && timer.get() > 9){
-						auto_degree_turn(0);
-					} 
-					
-					if(timer.get() < 12 && timer.get() > 11){
-						drive_drift_compensation(initial_value, .3, .3, 0);
-					}
-					
-					if(timer.get() < 14 && timer.get() > 12){
+					if(timer.get() < 3.5 && timer.get() > 2) {
 						auto_degree_turn(-90);
+						wheel_counter1.reset();
 					}
-					
-					if(timer.get() < 15 && timer.get() > 14) {
-						drive_drift_compensation(initial_value, .3, .3, -90);
+					if(timer.get() < 7.5 && timer.get() > 3.5){
+						if(wheel_counter1.getDistance()  < 6400){
+						    drive_drift_compensation(initial_value, .4, .3, -90);
+						}else if(wheel_counter1.getDistance() > 6700){
+							robotDrive.drive(-.15, 0);
+						}
 					}
-					
-					if(timer.get() < 16 && timer.get() > 15) {
-						drive_drift_compensation(initial_value, -.3, .3, -90);
+					if(timer.get() < 9 && timer.get() > 7.5) {
+						auto_degree_turn(0);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 13 && timer.get() > 9) {
+						if(wheel_counter1.getDistance()  < 7000){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 7300){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 15 && timer.get() > 13) {
+						auto_degree_turn(90);
+						wheel_counter1.reset();
 					}
 				}
 			}else if(stationSelected == right){
 				//Executes when the robot is placed in front of the right station
 				if(gameData.charAt(0) == 'L') {
-					if(timer.get() < 2) {
-						drive_drift_compensation(initial_value, .3, .3, 0);
+					if(timer.get() < 2 && timer.get() > 0){
+						if(wheel_counter1.getDistance()  < 1500){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 1800){
+							robotDrive.drive(-.15, 0);
+						}
 					}
-					if(timer.get() < 4 && timer.get() > 2){
-						auto_degree_turn(-90);
-					}
-					if(timer.get() < 9 && timer.get() > 4){
-						drive_drift_compensation(initial_value, .3, .3, -90);
-					}
-					if(timer.get() < 11 && timer.get() > 9){
-						auto_degree_turn(0);
-					}
-					if(timer.get() < 12 && timer.get() > 11){
-						drive_drift_compensation(initial_value, .3, .3, 0);
-					}
-					if(timer.get() < 14 && timer.get() > 12){
+					if(timer.get() < 3.5 && timer.get() > 2) {
 						auto_degree_turn(90);
+						wheel_counter1.reset();
 					}
-					if(timer.get() < 15 && timer.get() > 14) {
-						drive_drift_compensation(initial_value, .3, .3, 90);
+					if(timer.get() < 7.5 && timer.get() > 3.5){
+						if(wheel_counter1.getDistance()  < 6400){
+						    drive_drift_compensation(initial_value, .4, .3, 90);
+						}else if(wheel_counter1.getDistance() > 6700){
+							robotDrive.drive(-.15, 0);
+						}
 					}
-					if(timer.get() < 16 && timer.get() > 15) {
-						drive_drift_compensation(initial_value, -.3, .3, 90);
+					if(timer.get() < 9 && timer.get() > 7.5) {
+						auto_degree_turn(0);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 13 && timer.get() > 9) {
+						if(wheel_counter1.getDistance()  < 7000){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 7300){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 15 && timer.get() > 13) {
+						auto_degree_turn(-90);
+						wheel_counter1.reset();
 					}
 				}else{
-					if(timer.get() < 3){
-				    	drive_drift_compensation(initial_value, .3, .3, 0);
+					if(timer.get() < 4 && timer.get() > 0) {
+						if(wheel_counter1.getDistance()  < 7000){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 7300){
+							robotDrive.drive(-.15, 0);
+						}
 					}
-					if(timer.get() < 5 && timer.get() > 3){
+					if(timer.get() < 6 && timer.get() > 4) {
 						auto_degree_turn(-90);
-					}
-					if(timer.get() < 7 && timer.get() > 5){
-						drive_drift_compensation(initial_value, .3, .3, -90);
-					}
-					if (timer.get() < 7.25  && timer.get() > 7){
-						drive_drift_compensation(initial_value, -0.1, .3,  -90);
+						wheel_counter1.reset();
 					}
 				}
 				
@@ -363,9 +374,9 @@ public class Robot extends IterativeRobot {
 						wheel_counter1.reset();
 					}
 					if(timer.get() < 12 && timer.get() > 8) {
-						if(wheel_counter1.getDistance()  < 8000){
+						if(wheel_counter1.getDistance()  < 7000){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
-						}else if(wheel_counter1.getDistance() > 8300){
+						}else if(wheel_counter1.getDistance() > 7300){
 							robotDrive.drive(-.15, 0);
 						}
 					}
@@ -373,7 +384,8 @@ public class Robot extends IterativeRobot {
 						auto_degree_turn(-90);
 						wheel_counter1.reset();
 					}
-				}else{
+				}
+				else{
 					if(timer.get() < 2 && timer.get() > 0){
 						if(wheel_counter1.getDistance()  < 1500){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
@@ -397,9 +409,9 @@ public class Robot extends IterativeRobot {
 						wheel_counter1.reset();
 					}
 					if(timer.get() < 12 && timer.get() > 8) {
-						if(wheel_counter1.getDistance()  < 8000){
+						if(wheel_counter1.getDistance()  < 7000){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
-						}else if(wheel_counter1.getDistance() > 8300){
+						}else if(wheel_counter1.getDistance() > 7300){
 							robotDrive.drive(-.15, 0);
 						}
 					}
@@ -460,9 +472,9 @@ public class Robot extends IterativeRobot {
 					wheel_counter1.reset();
 				}
 				if(timer.get() < 12 && timer.get() > 8) {
-					if(wheel_counter1.getDistance()  < 8000){
+					if(wheel_counter1.getDistance()  < 7000){
 					    drive_drift_compensation(initial_value, .4, .3, 0);
-					}else if(wheel_counter1.getDistance() > 8300){
+					}else if(wheel_counter1.getDistance() > 7300){
 						robotDrive.drive(-.15, 0);
 					}
 				}
