@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PIDController;
 import edu.wpi.first.wpilibj.PWM;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotDrive;
@@ -33,6 +34,7 @@ import edu.wpi.first.wpilibj.Talon;
  * directory.
  */
 public class Robot extends IterativeRobot {
+
 	//Initialize the string for storing field data
 	String gameData;
 	
@@ -68,10 +70,16 @@ public class Robot extends IterativeRobot {
 	
 	//Create empty storage values
 	double initial_value;
-	
 	double compass_value;
 	double lift_value;
 
+	//Initialize the pid loop
+	double p = -1.7; 
+	double i = 0;
+	double d = 0;
+	
+	PIDController PID = new PIDController(p, i, d, lift_measure, lift_screw_motor);
+	
 	
 	//Initialize the talons used for testing with the breadboard, leave this commented out
 	//CANTalon talon1 = new CANTalon(2);
@@ -195,6 +203,8 @@ public class Robot extends IterativeRobot {
 		right_slave_motor.follow(motor2);
 		left_slave_motor.follow(motor1);
 	
+		PID.setInputRange(.45, .6);
+		PID.setContinuous(false);
 	}
 
 	/**
@@ -215,7 +225,7 @@ public class Robot extends IterativeRobot {
 		
 		//Retrieve values from the auto selector and publish values
 		autoSelected = chooser.getSelected();
-	//	auto_delay_value = SmartDashboard.getNumber("Delay Value", 0);
+		//auto_delay_value = SmartDashboard.getNumber("Delay Value", 0);
 		System.out.println("Auto selected: " + autoSelected);
 			
 		stationSelected = station_chooser.getSelected();
@@ -520,17 +530,17 @@ public class Robot extends IterativeRobot {
 			}
 			
 			//Map buttons to proper gripper functions
-			if(stick2.getRawButton(10)) { 
+			if(stick2.getRawButton(9)) { 
 				//opens the pnuematic arms on the robot
 				grip0.set(true);
 				grip1.set(true);
 			}
-			else if(stick2.getRawButton(12)) { 
+			else if(stick2.getRawButton(11)) { 
 				//Closes the pnuematic arms on the robot - soft
 				grip0.set(true);
 				grip1.set(false);
 			}
-			else if(stick2.getRawButton(14)) { 
+			else if(stick2.getRawButton(13)) { 
 				//Closes the pnuematic arms on the robot - hard
 				grip0.set(false);
 				grip1.set(false);
@@ -549,12 +559,51 @@ public class Robot extends IterativeRobot {
 				grasping_motor_left.set(0);
 				grasping_motor_right.set(0);
 			}
+			if(stick1.getRawButton(12)){ 
+				PID.disable();
+				lift_screw_motor.set(-.5);
+			}else if(stick1.getRawButton(11)){
+				PID.disable();
+				lift_screw_motor.set(.5);
+			}else if(stick2.getRawButton(10)){
+				if(lift_measure.getAverageVoltage() > .549 && lift_measure.getAverageVoltage() < .551) {
+					lift_screw_motor.set(0);
+				}else if(lift_measure.getAverageVoltage() > .5500 || lift_measure.getAverageVoltage() > .5501) {
+					lift_screw_motor.set(((-.56 + lift_measure.getAverageVoltage()) * 10) + .4);
+				}else if(lift_measure.getAverageVoltage() < .5500 || lift_measure.getAverageVoltage() < .5499) {
+					lift_screw_motor.set(((-.56 + lift_measure.getAverageVoltage()) * 10) - .3);
+				}
+			}else if(stick2.getRawButton(12)){
+				if(lift_measure.getAverageVoltage() > .529 && lift_measure.getAverageVoltage() < .531) {
+					lift_screw_motor.set(0);
+				}else if(lift_measure.getAverageVoltage() > .5300 || lift_measure.getAverageVoltage() > .5301) {
+					lift_screw_motor.set(((-.56 + lift_measure.getAverageVoltage()) * 3) + .4);
+				}else if(lift_measure.getAverageVoltage() < .5300 || lift_measure.getAverageVoltage() < .5299) {
+					lift_screw_motor.set(((-.56 + lift_measure.getAverageVoltage()) * 10) - .3);
+				}
+			}else if(stick2.getRawButton(14)){
+				if(lift_measure.getAverageVoltage() > .509 && lift_measure.getAverageVoltage() < .511) {
+					lift_screw_motor.set(0);
+				}else if(lift_measure.getAverageVoltage() > .5100 || lift_measure.getAverageVoltage() > .5101) {
+					lift_screw_motor.set(((-.56 + lift_measure.getAverageVoltage()) * 1) + .45);
+				}else if(lift_measure.getAverageVoltage() < .5100 || lift_measure.getAverageVoltage() < .5099) {
+					lift_screw_motor.set(((-.56 + lift_measure.getAverageVoltage()) * 10) - .3);
+				}
+			}else {
+				PID.disable();
+				lift_screw_motor.set(0);
+			}
+			
+			 
+			
 			//Publish SmartDashboard values
 			SmartDashboard.putBoolean("Smooth Drive", stick1.getRawButton(1));
 			SmartDashboard.putNumber("Compass Variance", compass_value);
 			SmartDashboard.putNumber("Lift Angle", lift_value);
 			SmartDashboard.putNumber("Encoder Value", wheel_counter1.getDistance());
-			
+			SmartDashboard.putNumber("Lift Voltage", lift_measure.getAverageVoltage() );
+			SmartDashboard.putNumber("Test Value", ((-.56 + lift_measure.getAverageVoltage()) * 10) + .3);
+			SmartDashboard.putNumber("Test Value 2", -(((-.56 + lift_measure.getAverageVoltage()) * 10) - .3));
 			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
 			
 			//Reset Pigeon IMU value
