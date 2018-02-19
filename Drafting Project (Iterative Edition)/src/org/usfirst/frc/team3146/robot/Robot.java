@@ -6,7 +6,9 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 import com.ctre.phoenix.sensors.PigeonIMU;
 
+import edu.wpi.cscore.UsbCamera;
 import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -72,6 +74,7 @@ public class Robot extends IterativeRobot {
 	double initial_value;
 	double compass_value;
 	double lift_value;
+	double initial_lift_value;
 
 	//Initialize the pid loop
 	double p = -1.7; 
@@ -176,6 +179,8 @@ public class Robot extends IterativeRobot {
 	public void robotInit() {
 		//Retrieve the initial Magnetometer value for teleop purposes
 		initial_value = pigeon.getFusedHeading();
+		initial_lift_value = lift_measure.getAverageValue();
+		
 		
 		//Reset Encoder values
 		wheel_counter1.reset();
@@ -205,7 +210,13 @@ public class Robot extends IterativeRobot {
 	
 		PID.setInputRange(.45, .6);
 		PID.setContinuous(false);
+		
+		//Camera
+		UsbCamera camera1 = CameraServer.getInstance().startAutomaticCapture();
+		camera1.setResolution(640, 480);
+		camera1.setFPS(20);
 	}
+	
 
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select
@@ -230,7 +241,7 @@ public class Robot extends IterativeRobot {
 			
 		stationSelected = station_chooser.getSelected();
 		
-		//Reset and start the timer\
+		//Reset and start the timer
 		
 		timer.reset();
 		timer.start(); 
@@ -251,14 +262,20 @@ public class Robot extends IterativeRobot {
 		compass_value = (initial_value - pigeon.getFusedHeading());
 		
 		
-		//Check and execute the delay variable for competition
+		//Check and execute the delay variable for competition (may be commented out when not needed for competition)
 		//Timer.delay(auto_delay_value);
+		
+		
 		if(autoSelected == Single_Placement){
-			//Attempts to place a single power cube on the switch
+			//All of the auto code below is made to place a single power cube onto the switch
 			if(stationSelected == left){
-				//Executes when the robot is placed in front of the left station
+				
 				if(gameData.charAt(0) == 'L') {
-					//Executes if the switch is on the right
+					
+					//The auto program below executes when the robot is placed on the left side of the switch, and is aimed to place a single power cube into the left switch
+					
+					//Executes between 0 and 4 seconds
+					//Travels roughly 7000 encoder pulses
 					if(timer.get() < 4 && timer.get() > 0) {
 						if(wheel_counter1.getDistance()  < 7000){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
@@ -266,6 +283,9 @@ public class Robot extends IterativeRobot {
 							robotDrive.drive(-.15, 0);
 						}
 					}
+					
+					//Executes between 4 and 6 seconds into auto
+					//Does a perfect 90 degree turn to face the switch
 					if(timer.get() < 6 && timer.get() > 4) {
 						auto_degree_turn(90);
 						wheel_counter1.reset();
@@ -273,7 +293,11 @@ public class Robot extends IterativeRobot {
 					
 				    
 				}else{
-					//Executes if the switch is on the left
+					
+					//The auto program below executes when the robot is placed on the left side of the switch, and is aiming to place a power cube into the left switch
+					
+					//Executes between 0 and 2 seconds
+					//Drives forward roughly 1500 encoder pulses
 					if(timer.get() < 2 && timer.get() > 0){
 						if(wheel_counter1.getDistance()  < 1500){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
@@ -281,10 +305,16 @@ public class Robot extends IterativeRobot {
 							robotDrive.drive(-.15, 0);
 						}
 					}
+					
+					//Executes between 2 and 3.5 seconds
+					//Turns exactly -90 degrees
 					if(timer.get() < 3.5 && timer.get() > 2) {
 						auto_degree_turn(-90);
 						wheel_counter1.reset();
 					}
+					
+					//Executes between 3.5 and 7.5 seconds
+					///Travels to the left roughly 6400 encoder pulses
 					if(timer.get() < 7.5 && timer.get() > 3.5){
 						if(wheel_counter1.getDistance()  < 6400){
 						    drive_drift_compensation(initial_value, .4, .3, -90);
@@ -292,10 +322,16 @@ public class Robot extends IterativeRobot {
 							robotDrive.drive(-.15, 0);
 						}
 					}
+					
+					//Executes between 7.5 and 9 seconds
+					//Turns to exactly 0 degrees (straight ahead)
 					if(timer.get() < 9 && timer.get() > 7.5) {
 						auto_degree_turn(0);
 						wheel_counter1.reset();
 					}
+					
+					//Executes between 9 and 13 seconds
+					//Travels forward roughly 7000 encoder pulses
 					if(timer.get() < 13 && timer.get() > 9) {
 						if(wheel_counter1.getDistance()  < 7000){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
@@ -303,14 +339,21 @@ public class Robot extends IterativeRobot {
 							robotDrive.drive(-.15, 0);
 						}
 					}
+					
+					//Executes between 13 and 15 seconds
+					//Does a 90 degree turn to face the switch
 					if(timer.get() < 15 && timer.get() > 13) {
 						auto_degree_turn(90);
 						wheel_counter1.reset();
 					}
+					
 				}
 			}else if(stationSelected == right){
 				//Executes when the robot is placed in front of the right station
 				if(gameData.charAt(0) == 'L') {
+					
+					//Executes between 0 and 2 seconds
+					//Travels forward roughly 1500 encoder pulses
 					if(timer.get() < 2 && timer.get() > 0){
 						if(wheel_counter1.getDistance()  < 1500){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
@@ -318,10 +361,16 @@ public class Robot extends IterativeRobot {
 							robotDrive.drive(-.15, 0);
 						}
 					}
+					
+					//Executes between 2 and 3.5 seconds
+			    	//Turns to exactly 90 degrees 
 					if(timer.get() < 3.5 && timer.get() > 2) {
 						auto_degree_turn(90);
 						wheel_counter1.reset();
 					}
+					
+					//Executes between 3.5 and 7.5
+					//Travels to the right roughly 6400 encoder pulses
 					if(timer.get() < 7.5 && timer.get() > 3.5){
 						if(wheel_counter1.getDistance()  < 6400){
 						    drive_drift_compensation(initial_value, .4, .3, 90);
@@ -329,10 +378,16 @@ public class Robot extends IterativeRobot {
 							robotDrive.drive(-.15, 0);
 						}
 					}
+					
+					//Executes between 7.5 and 9 pulses
+					//Turns to exactly 0 degrees
 					if(timer.get() < 9 && timer.get() > 7.5) {
 						auto_degree_turn(0);
 						wheel_counter1.reset();
 					}
+					
+					//Executes between 9 and 13 seconds
+					//Travels forward roughly 7000 encoder pulses
 					if(timer.get() < 13 && timer.get() > 9) {
 						if(wheel_counter1.getDistance()  < 7000){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
@@ -340,11 +395,16 @@ public class Robot extends IterativeRobot {
 							robotDrive.drive(-.15, 0);
 						}
 					}
+					
+					//Executes between 13 and 15 seconds
+					//Turns to -90 degrees
 					if(timer.get() < 15 && timer.get() > 13) {
 						auto_degree_turn(-90);
 						wheel_counter1.reset();
 					}
-				}else{
+					
+				}else{		
+					
 					if(timer.get() < 4 && timer.get() > 0) {
 						if(wheel_counter1.getDistance()  < 7000){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
@@ -500,7 +560,7 @@ public class Robot extends IterativeRobot {
 		SmartDashboard.putNumber("Compass Variance", compass_value);
 		SmartDashboard.putNumber("Encoder Value", wheel_counter1.getDistance());
 		
-		//Reset Pigeon IMU value
+		//Reset Pigeon IMU value when it exceeds a value of 360
 		if(pigeon.getFusedHeading() > 360) {
 			compass_value = 0;
 		}
@@ -514,22 +574,24 @@ public class Robot extends IterativeRobot {
 	public void teleopPeriodic() {
 		robotDrive.setSafetyEnabled(true); 
 		while (isOperatorControl() && isEnabled()) { // Ensures that robot is enabled and in Teleoperated mode
+			
 			//Smooth drive code (with tangent)
 			double slow_val_z = (stick1.getZ() / -1.5); //inverts and reduces x value
 			double slow_val_y = (Math.tan(stick1.getY()) * -.5); //reduces y value on a tangent curve
 			
-			//Assign compass value and lift value
+			//Assign compass value and lift value to their respective mathematical functions
 			compass_value = (initial_value - pigeon.getFusedHeading());
-			lift_value = (Math.abs(lift_measure.getAverageValue() - 436));
+			lift_value = ((lift_measure.getAverageValue() - initial_lift_value) * -1);
 			
-			//Drive functions
+			//The code below maps the joystick axis to their proper drive functions
 			if(stick1.getRawButton(1)) {
 				robotDrive.arcadeDrive(slow_val_y, slow_val_z); //smooth drive when top trigger is pressed
 			}else{
 				robotDrive.arcadeDrive((stick1.getY() * -1), (stick1.getZ() * -1)); //normal drive
 			}
 			
-			//Map buttons to proper gripper functions
+			
+			//The code below maps all buttons to their proper functions
 			if(stick2.getRawButton(9)) { 
 				//opens the pnuematic arms on the robot
 				grip0.set(true);
@@ -546,65 +608,74 @@ public class Robot extends IterativeRobot {
 				grip1.set(false);
 			}
 			if(stick2.getRawButton(7)) { 
-				//opens the pnuematic arms on the robot
+				//Moves the grasping wheels forward in order to spit out a cube
 				 grasping_motor_left.set(1);
 				 grasping_motor_right.set(1);
 			}
 			if(stick2.getRawButton(8)) { 
-				//Closes the pnuematic arms on the robot
+				//Moves the grasping wheels backward in order to pull in a cube
 				grasping_motor_left.set(-1);
 				grasping_motor_right.set(-1);
 			}
-			if(stick2.getRawButton(7) == false && stick2.getRawButton(8) == false){ //If nothing is pressed
+			if(stick2.getRawButton(7) == false && stick2.getRawButton(8) == false){ 
+				//Sets the grasping motor speed to zero in the event that no buttons are bieng pressed
 				grasping_motor_left.set(0);
 				grasping_motor_right.set(0);
 			}
 			if(stick1.getRawButton(12)){ 
-				PID.disable();
+				//code for manually operation of the arm (mostly used for testing purposes, and won't be used during real gameplay)
 				lift_screw_motor.set(-.5);
 			}else if(stick1.getRawButton(11)){
-				PID.disable();
+				//code for manually operation of the arm (mostly used for testing purposes, and won't be used during real gameplay)
 				lift_screw_motor.set(.5);
 			}else if(stick2.getRawButton(10)){
-				if(lift_measure.getAverageVoltage() > .549 && lift_measure.getAverageVoltage() < .551) {
+				
+				//Code that cuases the arm to move to a low position (exactly when the lift encoder outputs between .549, and .551 volts)
+				//This position will be acheived by pressing button 10 on joystick 2
+				if(lift_value > -1 && lift_value < 1) {
 					lift_screw_motor.set(0);
-				}else if(lift_measure.getAverageVoltage() > .5500 || lift_measure.getAverageVoltage() > .5501) {
-					lift_screw_motor.set(((-.56 + lift_measure.getAverageVoltage()) * 10) + .4);
-				}else if(lift_measure.getAverageVoltage() < .5500 || lift_measure.getAverageVoltage() < .5499) {
-					lift_screw_motor.set(((-.56 + lift_measure.getAverageVoltage()) * 10) - .3);
+				}else if(lift_value > 0) {
+					lift_screw_motor.set((((lift_value) * -1) * 0.045) - .3);
+				}else if(lift_value < 0) {
+					lift_screw_motor.set(((lift_value) * .045) + .4);
 				}
 			}else if(stick2.getRawButton(12)){
-				if(lift_measure.getAverageVoltage() > .529 && lift_measure.getAverageVoltage() < .531) {
+				
+				//Code that cuases the arm to move to a low position (exactly when the lift encoder outputs between .529, and .531 volts)
+				//This position will be acheived by pressing button 12 on joystick 2
+				if(lift_value > 14 && lift_value < 16) {
 					lift_screw_motor.set(0);
-				}else if(lift_measure.getAverageVoltage() > .5300 || lift_measure.getAverageVoltage() > .5301) {
-					lift_screw_motor.set(((-.56 + lift_measure.getAverageVoltage()) * 3) + .4);
-				}else if(lift_measure.getAverageVoltage() < .5300 || lift_measure.getAverageVoltage() < .5299) {
-					lift_screw_motor.set(((-.56 + lift_measure.getAverageVoltage()) * 10) - .3);
+				}else if(lift_value > 15) {
+					lift_screw_motor.set((((lift_value - 15) * -1) * 0.045) - .3);
+				}else if(lift_value < 15) {
+					lift_screw_motor.set(((15 - lift_value) * .045) + .4);
 				}
 			}else if(stick2.getRawButton(14)){
-				if(lift_measure.getAverageVoltage() > .509 && lift_measure.getAverageVoltage() < .511) {
+				
+				//Code that cuases the arm to move to a low position (exactly when the lift encoder outputs between .509, and .511 volts)
+				//This position will be acheived by pressing button 14 on joystick 2
+				if(lift_value > 39 && lift_value < 41) {
 					lift_screw_motor.set(0);
-				}else if(lift_measure.getAverageVoltage() > .5100 || lift_measure.getAverageVoltage() > .5101) {
-					lift_screw_motor.set(((-.56 + lift_measure.getAverageVoltage()) * 1) + .45);
-				}else if(lift_measure.getAverageVoltage() < .5100 || lift_measure.getAverageVoltage() < .5099) {
-					lift_screw_motor.set(((-.56 + lift_measure.getAverageVoltage()) * 10) - .3);
+				}else if(lift_value > 40) {
+					lift_screw_motor.set((((lift_value - 40) * -1) * 0.045) - .3);
+				}else if(lift_value < 40) {
+					lift_screw_motor.set(((40 - lift_value) * .035) + .4);
 				}
 			}else {
-				PID.disable();
+				
+				//Code that sets the lift_screw_motor's speed to 0 in the event that no button is pressed at all
 				lift_screw_motor.set(0);
 			}
 			
-			 
-			
 			//Publish SmartDashboard values
-			SmartDashboard.putBoolean("Smooth Drive", stick1.getRawButton(1));
-			SmartDashboard.putNumber("Compass Variance", compass_value);
-			SmartDashboard.putNumber("Lift Angle", lift_value);
-			SmartDashboard.putNumber("Encoder Value", wheel_counter1.getDistance());
-			SmartDashboard.putNumber("Lift Voltage", lift_measure.getAverageVoltage() );
-			SmartDashboard.putNumber("Test Value", ((-.56 + lift_measure.getAverageVoltage()) * 10) + .3);
-			SmartDashboard.putNumber("Test Value 2", -(((-.56 + lift_measure.getAverageVoltage()) * 10) - .3));
-			Timer.delay(.005); //Delays Cycles in order to avoid undue CPU usage
+			SmartDashboard.putBoolean("Smooth Drive", stick1.getRawButton(1)); //Indicates whether or not smooth drive is active
+			SmartDashboard.putNumber("Compass Variance", compass_value); //Displays the variance between the IMU's starting direction and it's current angle 
+			SmartDashboard.putNumber("Lift Angle", lift_value); //outputs the value of the lift (displays the average voltage output)
+			SmartDashboard.putNumber("Encoder Value", wheel_counter1.getDistance());//Displays the current encoder count
+			
+			
+			//Delays Cycles in order to avoid undue CPU usage
+			Timer.delay(.005);
 			
 			//Reset Pigeon IMU value
 			if(pigeon.getFusedHeading() > 360) {
