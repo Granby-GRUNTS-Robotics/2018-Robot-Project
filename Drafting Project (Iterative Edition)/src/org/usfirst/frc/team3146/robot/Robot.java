@@ -132,9 +132,9 @@ public class Robot extends IterativeRobot {
 	//Function that allows the robot to turn to a very specific degree
 	public void auto_degree_turn( double turn_degree){
 			if((initial_value - pigeon.getFusedHeading()) < (turn_degree - 2)){
-				robotDrive.drive(( 1 / (initial_value - pigeon.getFusedHeading() + 10) + .25), 1);
+				robotDrive.drive(( 1 / (initial_value - pigeon.getFusedHeading() + 10) + .3), 1);
 			}else if((initial_value - pigeon.getFusedHeading()) > (turn_degree + 2)){
-				robotDrive.drive(( 1 / (initial_value - Math.abs(pigeon.getFusedHeading()) + 10) + .25), -1);
+				robotDrive.drive(( 1 / (initial_value - Math.abs(pigeon.getFusedHeading()) + 10) + .3), -1);
 			}else{
 				robotDrive.drive(0, 0);
 			}
@@ -233,6 +233,7 @@ public class Robot extends IterativeRobot {
 	public void autonomousInit() {
 		//Retrieve the initial magnetometer value for autonomous purposes
 		initial_value = pigeon.getFusedHeading();	
+		initial_lift_value = lift_measure.getAverageValue();
 		
 		//Retrieve values from the auto selector and publish values
 		autoSelected = chooser.getSelected();
@@ -260,7 +261,7 @@ public class Robot extends IterativeRobot {
 	public void autonomousPeriodic() {
 		//Declare updated value
 		compass_value = (initial_value - pigeon.getFusedHeading());
-		
+		lift_value = ((lift_measure.getAverageValue() - initial_lift_value) * -1);
 		
 		//Check and execute the delay variable for competition (may be commented out when not needed for competition)
 		//Timer.delay(auto_delay_value);
@@ -283,7 +284,6 @@ public class Robot extends IterativeRobot {
 							robotDrive.drive(-.15, 0);
 						}
 					}
-					
 					//Executes between 4 and 6 seconds into auto
 					//Does a perfect 90 degree turn to face the switch
 					if(timer.get() < 6 && timer.get() > 4) {
@@ -291,7 +291,20 @@ public class Robot extends IterativeRobot {
 						wheel_counter1.reset();
 					}
 					
-				    
+					if(timer.get() < 8 && timer.get() > 6) {
+						if(lift_value > 29 && lift_value < 31) {
+							lift_screw_motor.set(0);
+						}else if(lift_value > 30) {
+							lift_screw_motor.set((((lift_value - 30) * -1) * 0.045) - .3);
+						}else if(lift_value < 30) {
+							lift_screw_motor.set(((30 - lift_value) * .045) + .4);
+						}
+						if(wheel_counter1.getDistance()  < 400){
+						    drive_drift_compensation(initial_value, .4, .3, 90);
+						}else if(wheel_counter1.getDistance() > 700){
+							robotDrive.drive(-.15, 0);
+						}  
+					}
 				}else{
 					
 					//The auto program below executes when the robot is placed on the left side of the switch, and is aiming to place a power cube into the left switch
@@ -412,9 +425,26 @@ public class Robot extends IterativeRobot {
 							robotDrive.drive(-.15, 0);
 						}
 					}
+					//Executes between 4 and 6 seconds into auto
+					//Does a perfect 90 degree turn to face the switch
 					if(timer.get() < 6 && timer.get() > 4) {
 						auto_degree_turn(-90);
 						wheel_counter1.reset();
+					}
+					
+					if(timer.get() < 8 && timer.get() > 6) {
+						if(lift_value > 29 && lift_value < 31) {
+							lift_screw_motor.set(0);
+						}else if(lift_value > 30) {
+							lift_screw_motor.set((((lift_value - 30) * -1) * 0.045) - .3);
+						}else if(lift_value < 30) {
+							lift_screw_motor.set(((30 - lift_value) * .045) + .4);
+						}
+						if(wheel_counter1.getDistance()  < 400){
+						    drive_drift_compensation(initial_value, .4, .3, -90);
+						}else if(wheel_counter1.getDistance() > 700){
+							robotDrive.drive(-.15, 0);
+						}  
 					}
 				}
 				
@@ -422,9 +452,77 @@ public class Robot extends IterativeRobot {
 				//Executes when the robot is placed in front of the middle station
 				if(gameData.charAt(0) == 'L'){
 					if(timer.get() < 2 && timer.get() > 0){
-						if(wheel_counter1.getDistance()  < 1500){
+						if(wheel_counter1.getDistance()  < 1700){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
-						}else if(wheel_counter1.getDistance() > 1800){
+						}else if(wheel_counter1.getDistance() > 2000){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 3.5 && timer.get() > 2) {
+						auto_degree_turn(-90);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 5.5 && timer.get() > 3.5){
+						if(wheel_counter1.getDistance()  < 2400){
+						    drive_drift_compensation(initial_value, .4, .3, -90);
+						}else if(wheel_counter1.getDistance() > 2600){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 7 && timer.get() > 5.5) {
+						auto_degree_turn(0);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 8 && timer.get() > 7) {
+						if(lift_value > 29 && lift_value < 31) {
+							lift_screw_motor.set(0);
+						}else if(lift_value > 30) {
+							lift_screw_motor.set((((lift_value - 30) * -1) * 0.045) - .3);
+						}else if(lift_value < 30) {
+							lift_screw_motor.set(((30 - lift_value) * .045) + .4);
+						}
+						if(wheel_counter1.getDistance()  < 1200){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 1500){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 9 && timer.get() > 8) {
+						lift_screw_motor.set(0);
+						//insert cube release code here
+					}
+					if(timer.get() < 10.5 && timer.get() > 9) {
+						lift_screw_motor.set(0);
+						auto_degree_turn(-90);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 12.5 && timer.get() > 10.5) {
+						lift_screw_motor.set(0);
+						if(wheel_counter1.getDistance()  < 2700){
+						    drive_drift_compensation(initial_value, .4, .3, -90);
+						}else if(wheel_counter1.getDistance() > 3000){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 14 && timer.get() > 12.5) {
+						lift_screw_motor.set(0);
+						auto_degree_turn(0);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 15 && timer.get() > 14) {
+						lift_screw_motor.set(0);
+						if(wheel_counter1.getDistance()  < 2000){
+						    drive_drift_compensation(initial_value, .5, .3, 0);
+						}else if(wheel_counter1.getDistance() > 2300){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+				}
+				else{//right from middle
+					if(timer.get() < 2 && timer.get() > 0){
+						if(wheel_counter1.getDistance()  < 1700){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 2000){
 							robotDrive.drive(-.15, 0);
 						}
 					}
@@ -432,34 +530,94 @@ public class Robot extends IterativeRobot {
 						auto_degree_turn(90);
 						wheel_counter1.reset();
 					}
-					if(timer.get() < 6.5 && timer.get() > 3.5){
-						if(wheel_counter1.getDistance()  < 5400){
+					if(timer.get() < 5.5 && timer.get() > 3.5){
+						if(wheel_counter1.getDistance()  < 2400){
 						    drive_drift_compensation(initial_value, .4, .3, 90);
-						}else if(wheel_counter1.getDistance() > 5700){
+						}else if(wheel_counter1.getDistance() > 2600){
 							robotDrive.drive(-.15, 0);
 						}
 					}
-					if(timer.get() < 8 && timer.get() > 6.5) {
+					if(timer.get() < 7 && timer.get() > 5.5) {
 						auto_degree_turn(0);
 						wheel_counter1.reset();
 					}
-					if(timer.get() < 12 && timer.get() > 8) {
-						if(wheel_counter1.getDistance()  < 7000){
+					if(timer.get() < 8 && timer.get() > 7) {
+						if(lift_value > 29 && lift_value < 31) {
+							lift_screw_motor.set(0);
+						}else if(lift_value > 30) {
+							lift_screw_motor.set((((lift_value - 30) * -1) * 0.045) - .3);
+						}else if(lift_value < 30) {
+							lift_screw_motor.set(((30 - lift_value) * .045) + .4);
+						}
+						if(wheel_counter1.getDistance()  < 1700){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
-						}else if(wheel_counter1.getDistance() > 7300){
+						}else if(wheel_counter1.getDistance() > 2000){
 							robotDrive.drive(-.15, 0);
 						}
 					}
-					if(timer.get() < 15 && timer.get() > 12) {
-						auto_degree_turn(-90);
+					if(timer.get() < 9 && timer.get() > 8) {
+						lift_screw_motor.set(0);
+						//insert cube release code here
+					}
+					if(timer.get() < 10.5 && timer.get() > 9) {
+						lift_screw_motor.set(0);
+						auto_degree_turn(90);
 						wheel_counter1.reset();
 					}
+					if(timer.get() < 12.5 && timer.get() > 10.5) {
+						lift_screw_motor.set(0);
+						if(wheel_counter1.getDistance()  < 2700){
+						    drive_drift_compensation(initial_value, .4, .3, 90);
+						}else if(wheel_counter1.getDistance() > 3000){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 14 && timer.get() > 12.5) {
+						lift_screw_motor.set(0);
+						auto_degree_turn(0);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 15 && timer.get() > 14) {
+						lift_screw_motor.set(0);
+						if(wheel_counter1.getDistance()  < 2000){
+						    drive_drift_compensation(initial_value, .5, .3, 0);
+						}else if(wheel_counter1.getDistance() > 2300){
+							robotDrive.drive(-.15, 0);
+						}
+					}
 				}
-				else{
+			}
+		}else if(autoSelected == Double_Placement){
+			//Places a single power cube on the switch, and attempts to retrieve and place a second
+			if(stationSelected == left){
+				//Executes when the robot is placed in front of the left station
+			}else if(stationSelected == right){
+				//Executes when the robot is placed in front of the right station
+			}else{
+				//Executes when the robot is placed in front of the middle station
+			}
+		}else{
+			//Only used in emergencies, simply crosses the baseline
+			if(stationSelected == left){
+				//Executes when the robot is placed in front of the left station
+				if(wheel_counter1.getDistance()  < 7300){
+			    	drive_drift_compensation(initial_value, .4, .3, 0);
+				}else if(wheel_counter1.getDistance() > 7600){
+					robotDrive.drive(-.15, 0);
+				}
+			}else if(stationSelected == right){
+				//Executes when the robot is placed in front of the right station
+				if(wheel_counter1.getDistance()  < 7300){
+			    	drive_drift_compensation(initial_value, .4, .3, 0);
+				}else if(wheel_counter1.getDistance() > 7600){
+					robotDrive.drive(-.15, 0);
+				}
+			}else if(stationSelected == middle){
+				if(gameData.charAt(0) == 'L'){//Executes when the robot is placed in front of the middle station
 					if(timer.get() < 2 && timer.get() > 0){
-						if(wheel_counter1.getDistance()  < 1500){
+						if(wheel_counter1.getDistance()  < 1700){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
-						}else if(wheel_counter1.getDistance() > 1800){
+						}else if(wheel_counter1.getDistance() > 2000){
 							robotDrive.drive(-.15, 0);
 						}
 					}
@@ -478,81 +636,80 @@ public class Robot extends IterativeRobot {
 						auto_degree_turn(0);
 						wheel_counter1.reset();
 					}
-					if(timer.get() < 12 && timer.get() > 8) {
-						if(wheel_counter1.getDistance()  < 7000){
+					if(timer.get() < 11.5 && timer.get() > 8) {
+						if(wheel_counter1.getDistance()  < 5500){
 						    drive_drift_compensation(initial_value, .4, .3, 0);
-						}else if(wheel_counter1.getDistance() > 7300){
+						}else if(wheel_counter1.getDistance() > 5800){
 							robotDrive.drive(-.15, 0);
 						}
 					}
-					if(timer.get() < 15 && timer.get() > 12) {
+					if(timer.get() < 13 && timer.get() > 11.5) {
 						auto_degree_turn(90);
 						wheel_counter1.reset();
 					}
-				}
-			}
-		}else if(autoSelected == Double_Placement){
-			//Places a single power cube on the switch, and attempts to retrieve and place a second
-			if(stationSelected == left){
-				//Executes when the robot is placed in front of the left station
-			}else if(stationSelected == right){
-				//Executes when the robot is placed in front of the right station
-			}else{
-				//Executes when the robot is placed in front of the middle station
-			}
-		}else{
-			//Only used in emergencies, simply crosses the baseline
-			if(stationSelected == left){
-				//Executes when the robot is placed in front of the left station
-				if(wheel_counter1.getDistance()  < 7000){
-			    	drive_drift_compensation(initial_value, .4, .3, 0);
-				}else if(wheel_counter1.getDistance() > 7300){
-					robotDrive.drive(-.15, 0);
-				}
-			}else if(stationSelected == right){
-				//Executes when the robot is placed in front of the left station\
-				//Executes when the robot is placed in front of the left station
-				if(wheel_counter1.getDistance()  < 7000){
-			    	drive_drift_compensation(initial_value, .4, .3, 0);
-				}else if(wheel_counter1.getDistance() > 7300){
-					robotDrive.drive(-.15, 0);
-				}
-			}else if(stationSelected == middle){
-				//Executes when the robot is placed in front of the left station\
-				if(timer.get() < 2 && timer.get() > 0){
-					if(wheel_counter1.getDistance()  < 1500){
-					    drive_drift_compensation(initial_value, .4, .3, 0);
-					}else if(wheel_counter1.getDistance() > 1800){
-						robotDrive.drive(-.15, 0);
+					if(timer.get() < 15 && timer.get() > 13) {
+						if(lift_value > 29 && lift_value < 31) {
+							lift_screw_motor.set(0);
+						}else if(lift_value > 30) {
+							lift_screw_motor.set((((lift_value - 30) * -1) * 0.045) - .3);
+						}else if(lift_value < 30) {
+							lift_screw_motor.set(((30 - lift_value) * .045) + .4);
+						}
+						if(wheel_counter1.getDistance()  < 400){
+						    drive_drift_compensation(initial_value, .4, .3, 90);
+						}else if(wheel_counter1.getDistance() > 700){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+				}else{
+					if(timer.get() < 2 && timer.get() > 0){
+						if(wheel_counter1.getDistance()  < 1700){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 2000){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 3.5 && timer.get() > 2) {
+						auto_degree_turn(90);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 6.5 && timer.get() > 3.5){
+						if(wheel_counter1.getDistance()  < 5400){
+						    drive_drift_compensation(initial_value, .4, .3, 90);
+						}else if(wheel_counter1.getDistance() > 5700){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 8 && timer.get() > 6.5) {
+						auto_degree_turn(0);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 11.5 && timer.get() > 8) {
+						if(wheel_counter1.getDistance()  < 5500){
+						    drive_drift_compensation(initial_value, .4, .3, 0);
+						}else if(wheel_counter1.getDistance() > 5800){
+							robotDrive.drive(-.15, 0);
+						}
+					}
+					if(timer.get() < 13 && timer.get() > 11.5) {
+						auto_degree_turn(-90);
+						wheel_counter1.reset();
+					}
+					if(timer.get() < 15 && timer.get() > 13) {
+						if(lift_value > 29 && lift_value < 31) {
+							lift_screw_motor.set(0);
+						}else if(lift_value > 30) {
+							lift_screw_motor.set((((lift_value - 30) * -1) * 0.045) - .3);
+						}else if(lift_value < 30) {
+							lift_screw_motor.set(((30 - lift_value) * .045) + .4);
+						}
+						if(wheel_counter1.getDistance()  < 400){
+						    drive_drift_compensation(initial_value, .4, .3, -90);
+						}else if(wheel_counter1.getDistance() > 700){
+							robotDrive.drive(-.15, 0);
+						}
 					}
 				}
-				if(timer.get() < 3.5 && timer.get() > 2) {
-					auto_degree_turn(90);
-					wheel_counter1.reset();
-				}
-				if(timer.get() < 6.5 && timer.get() > 3.5){
-					if(wheel_counter1.getDistance()  < 5400){
-					    drive_drift_compensation(initial_value, .4, .3, 90);
-					}else if(wheel_counter1.getDistance() > 5700){
-						robotDrive.drive(-.15, 0);
-					}
-				}
-				if(timer.get() < 8 && timer.get() > 6.5) {
-					auto_degree_turn(0);
-					wheel_counter1.reset();
-				}
-				if(timer.get() < 12 && timer.get() > 8) {
-					if(wheel_counter1.getDistance()  < 7000){
-					    drive_drift_compensation(initial_value, .4, .3, 0);
-					}else if(wheel_counter1.getDistance() > 7300){
-						robotDrive.drive(-.15, 0);
-					}
-				}
-				if(timer.get() < 15 && timer.get() > 12) {
-					auto_degree_turn(-90);
-					wheel_counter1.reset();
-				}
-
 			}
 		}
 		
@@ -564,8 +721,9 @@ public class Robot extends IterativeRobot {
 		if(pigeon.getFusedHeading() > 360) {
 			compass_value = 0;
 		}
-		
 	}
+		
+	
 
 	/**
 	 * This function is called periodically during operator control
@@ -643,23 +801,23 @@ public class Robot extends IterativeRobot {
 				
 				//Code that cuases the arm to move to a low position (exactly when the lift encoder outputs between .529, and .531 volts)
 				//This position will be acheived by pressing button 12 on joystick 2
-				if(lift_value > 14 && lift_value < 16) {
+				if(lift_value > 29 && lift_value < 31) {
 					lift_screw_motor.set(0);
-				}else if(lift_value > 15) {
-					lift_screw_motor.set((((lift_value - 15) * -1) * 0.045) - .3);
-				}else if(lift_value < 15) {
-					lift_screw_motor.set(((15 - lift_value) * .045) + .4);
+				}else if(lift_value > 30) {
+					lift_screw_motor.set((((lift_value - 30) * -1) * 0.045) - .3);
+				}else if(lift_value < 30) {
+					lift_screw_motor.set(((30 - lift_value) * .045) + .4);
 				}
 			}else if(stick2.getRawButton(14)){
 				
 				//Code that cuases the arm to move to a low position (exactly when the lift encoder outputs between .509, and .511 volts)
 				//This position will be acheived by pressing button 14 on joystick 2
-				if(lift_value > 39 && lift_value < 41) {
+				if(lift_value > 44 && lift_value < 46) {
 					lift_screw_motor.set(0);
-				}else if(lift_value > 40) {
-					lift_screw_motor.set((((lift_value - 40) * -1) * 0.045) - .3);
-				}else if(lift_value < 40) {
-					lift_screw_motor.set(((40 - lift_value) * .035) + .4);
+				}else if(lift_value > 45) {
+					lift_screw_motor.set((((lift_value - 45) * -1) * 0.045) - .3);
+				}else if(lift_value < 45) {
+					lift_screw_motor.set(((45 - lift_value) * .035) + .4);
 				}
 			}else {
 				
