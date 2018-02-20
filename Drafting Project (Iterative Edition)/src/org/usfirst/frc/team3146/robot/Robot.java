@@ -83,6 +83,8 @@ public class Robot extends IterativeRobot {
 	double compass_value;
 	double lift_value;
 	double initial_lift_value;
+	
+	boolean first_run_lift = true;
 
 	//Initialize the pid loop
 	double p = -1.7; 
@@ -169,39 +171,36 @@ public class Robot extends IterativeRobot {
 		
 	}
 	public void cube_shoot() {//right before this is run, set first time to 1. 
-		//In auto, put first_time = 1 in the command before. In teleop, put it with the trigger
-		if(first_time == 1)
-			cube_shoot_timer.reset(); //restarts the timer for this function
-			cube_shoot_timer.start();
-			grip0.set(true); //this is a soft close. May be changed to hard close based on testing
-			grip1.set(false);
-			first_time = 2;
-		if(first_time == 2) {
-			if(cube_shoot_timer.get() < 0.5 && cube_shoot_timer.get() > 0) {//move wrist
+		if(first_run_lift) {
+			if (cube_shoot_timer.get() == 0 || cube_shoot_timer.get() > 4) {
+				cube_shoot_timer.reset();
+				cube_shoot_timer.start();
+				first_run_lift = false;
+			}
+		}
+		if(first_run_lift == false) {
+			if(cube_shoot_timer.get() < 1 && cube_shoot_timer.get() > 0) {
 				wrist1.set(true);
 				wrist2.set(true);
-			}
-			if(cube_shoot_timer.get() < 1 && cube_shoot_timer.get() > 0.5) {//move wheels to spit cube
-				 grasping_motor_left.set(1);
-				 grasping_motor_right.set(1);
-			}
-			if(cube_shoot_timer.get() < 1.5 && cube_shoot_timer.get() > 1) {//move wrist back and stop wheels
+				if(lift_value > 29 && lift_value < 31) {
+					lift_screw_motor.set(0);
+				}else if(lift_value > 30) {
+					lift_screw_motor.set((((lift_value - 30) * -1) * 0.045) - .3);
+				}else if(lift_value < 30) {
+					lift_screw_motor.set(((30 - lift_value) * .045) + .4);
+				}
+			}else if(cube_shoot_timer.get() < 2 && cube_shoot_timer.get() > 1) {
+				grasping_motor_left.set(1);
+				grasping_motor_right.set(1);
+			}else if(cube_shoot_timer.get() < 2.5 && cube_shoot_timer.get() > 2) {
 				wrist1.set(false);
 				wrist2.set(false);
-				grasping_motor_left.set(0);
-				grasping_motor_right.set(0);
-			}
-			if(cube_shoot_timer.get() > 1.5) { //stop running the function
-				first_time = 3;
-			}
+			}else if(cube_shoot_timer.get() == 2.5) {
+				first_run_lift = true;
 				
+			}
 		}
-			
-		
-			
-			
-			
-		}
+	}	
 	//Starting the "Robot" function in order to define drive train and motor inversions
 	public Robot() {
 		//Robot drive
@@ -803,11 +802,7 @@ public class Robot extends IterativeRobot {
 				//Code that sets the lift_screw_motor's speed to 0 in the event that no button is pressed at all
 				lift_screw_motor.set(0);
 			}
-			
-			if (stick2.getRawButton(1) && stick2.getRawButton(3146) == false) {//placeholder button value I dont have a joystick right now
-				first_time = 1;
-			}
-			if (stick2.getRawButton(3146)) { //Same button as above
+			if (stick2.getRawButton(1)) {
 				cube_shoot();
 			}
 			//Publish SmartDashboard values
