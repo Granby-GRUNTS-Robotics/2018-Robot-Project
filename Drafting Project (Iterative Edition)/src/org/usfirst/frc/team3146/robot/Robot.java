@@ -53,6 +53,7 @@ public class Robot extends IterativeRobot {
 	//Initialize the encoders
 	AnalogInput lift_measure = new AnalogInput(2);
 	Encoder wheel_counter1 = new Encoder(1, 0, false, EncodingType.k4X);
+	Encoder wheel_counter2 = new Encoder(3, 2, false, EncodingType.k4X);
 	
 	//Intitialize the Victor SPX motor controls
 	WPI_VictorSPX motor1 = new WPI_VictorSPX(kLeftChannel);
@@ -70,13 +71,13 @@ public class Robot extends IterativeRobot {
 	//Initialize motors for climbing
 	VictorSP climber = new VictorSP(3);
 	
-	WPI_TalonSRX hook = new WPI_TalonSRX(3146); //this is a placeholder value until we can see the CAN bus on real bot
+	WPI_TalonSRX hook = new WPI_TalonSRX(6);
 	
 	//Initialize pnuematic gripper and wrist
-	Solenoid grip0 = new Solenoid(1, 0);
-	Solenoid grip1 = new Solenoid(1, 1);
-	Solenoid wrist1 = new Solenoid(1, 2);
-	Solenoid wrist2 = new Solenoid(1, 3);
+	Solenoid grip0 = new Solenoid(1, 3);
+	Solenoid grip1 = new Solenoid(1, 2);
+	Solenoid transmission = new Solenoid(1, 1);
+	Solenoid wrist= new Solenoid(1, 0);
 	
 	//Create empty storage values
 	double initial_value;
@@ -85,14 +86,6 @@ public class Robot extends IterativeRobot {
 	double initial_lift_value;
 	
 	boolean first_run_lift = true;
-
-	//Initialize the pid loop
-	double p = -1.7; 
-	double i = 0;
-	double d = 0;
-	
-	PIDController PID = new PIDController(p, i, d, lift_measure, lift_screw_motor);
-	
 	
 	//Initialize the talons used for testing with the breadboard, leave this commented out
 	//CANTalon talon1 = new CANTalon(2);
@@ -115,9 +108,6 @@ public class Robot extends IterativeRobot {
 	Timer timer = new Timer();
 	Timer cube_shoot_timer = new Timer();
 	
-	//interger will act like a 3-way boolean for cube placement function
-	int first_time;
-	
 	//Define variables for auto testing purposes 
 	boolean auto_running;
 	
@@ -139,7 +129,6 @@ public class Robot extends IterativeRobot {
 	SendableChooser<String> chooser = new SendableChooser<>();
 	//Define "station_chooser" object for station selector
 	SendableChooser<String> station_chooser = new SendableChooser<>();
-	
 	
 	//Custom functions 
 	
@@ -180,8 +169,7 @@ public class Robot extends IterativeRobot {
 		}
 		if(first_run_lift == false) {
 			if(cube_shoot_timer.get() < 1 && cube_shoot_timer.get() > 0) {
-				wrist1.set(true);
-				wrist2.set(true);
+				wrist.set(true);
 				if(lift_value > 29 && lift_value < 31) {
 					lift_screw_motor.set(0);
 				}else if(lift_value > 30) {
@@ -193,8 +181,7 @@ public class Robot extends IterativeRobot {
 				grasping_motor_left.set(1);
 				grasping_motor_right.set(1);
 			}else if(cube_shoot_timer.get() < 2.5 && cube_shoot_timer.get() > 2) {
-				wrist1.set(false);
-				wrist2.set(false);
+				wrist.set(false);
 			}else if(cube_shoot_timer.get() == 2.5) {
 				first_run_lift = true;
 				
@@ -223,7 +210,6 @@ public class Robot extends IterativeRobot {
 		//Retrieve the initial Magnetometer value for teleop purposes
 		initial_value = pigeon.getFusedHeading();
 		initial_lift_value = lift_measure.getAverageValue();
-		
 		
 		//Reset Encoder values
 		wheel_counter1.reset();
@@ -255,6 +241,9 @@ public class Robot extends IterativeRobot {
 		UsbCamera camera1 = CameraServer.getInstance().startAutomaticCapture();
 		camera1.setResolution(640, 480);
 		camera1.setFPS(20);
+		
+		hook.configContinuousCurrentLimit(40, 10);
+		hook.enableCurrentLimit(true);
 	}
 	
 
@@ -344,7 +333,6 @@ public class Robot extends IterativeRobot {
 						}else if(wheel_counter1.getDistance() > 700){
 							robotDrive.drive(-.15, 0);
 						}  
-						first_time = 1;
 					}
 					if(timer.get() < 9.5 && timer.get() > 8) {
 						cube_shoot();
@@ -398,7 +386,6 @@ public class Robot extends IterativeRobot {
 						}else if(wheel_counter1.getDistance() > 700){
 							robotDrive.drive(-.15, 0);
 						}  
-						first_time = 1;
 					}
 					if(timer.get() < 9.5 && timer.get() > 8) {
 						cube_shoot();
@@ -448,7 +435,6 @@ public class Robot extends IterativeRobot {
 						}else if(wheel_counter1.getDistance() > 1500){
 							robotDrive.drive(-.15, 0);
 						}
-						first_time = 1;
 					}
 					//Release cube
 					if(timer.get() < 9.5 && timer.get() > 8) {
@@ -521,7 +507,6 @@ public class Robot extends IterativeRobot {
 						}else if(wheel_counter1.getDistance() > 2000){
 							robotDrive.drive(-.15, 0);
 						}
-						first_time = 1;
 					}//Release cube
 					if(timer.get() < 9.5 && timer.get() > 8) {
 						lift_screw_motor.set(0);
@@ -740,12 +725,10 @@ public class Robot extends IterativeRobot {
 			}
 			
 			if (stick2.getRawButton(3)) {
-				wrist1.set(true);
-				wrist2.set(true);
+				wrist.set(true);
 			}
 			else if (stick2.getRawButton(4)) {
-				wrist1.set(false);
-				wrist2.set(false);
+				wrist.set(false);
 			}
 			if(stick2.getRawButton(7)) { 
 				//Moves the grasping wheels forward in order to spit out a cube
@@ -768,6 +751,7 @@ public class Robot extends IterativeRobot {
 			}else if(stick1.getRawButton(11)){
 				//code for manually operation of the arm (mostly used for testing purposes, and won't be used during real gameplay)
 				lift_screw_motor.set(.5);
+				
 			}else if(stick2.getRawButton(10)){
 				//Moves arm to lowest position (starting position)
 				//This position will be acheived by pressing button 10 on joystick 2
@@ -779,24 +763,24 @@ public class Robot extends IterativeRobot {
 					lift_screw_motor.set(((lift_value) * .045) + .4);
 				}
 			}else if(stick2.getRawButton(12)){
-				//Moves arm to middle position (switch height)
+				//Moves arm to middle position (slightly high for driving)
 				//This position will be acheived by pressing button 12 on joystick 2
+				if(lift_value > 6 && lift_value < 8) {
+					lift_screw_motor.set(0);
+				}else if(lift_value > 7) {
+					lift_screw_motor.set((((lift_value - 7) * -1) * 0.045) - .3);
+				}else if(lift_value < 7) {
+					lift_screw_motor.set(((7 - lift_value) * .045) + .4);
+				}
+			}else if(stick2.getRawButton(14)){
+				//Moves arm to middle position (switch height)
+				//This position will be acheived by pressing button 14 on joystick 2
 				if(lift_value > 29 && lift_value < 31) {
 					lift_screw_motor.set(0);
 				}else if(lift_value > 30) {
 					lift_screw_motor.set((((lift_value - 30) * -1) * 0.045) - .3);
 				}else if(lift_value < 30) {
 					lift_screw_motor.set(((30 - lift_value) * .045) + .4);
-				}
-			}else if(stick2.getRawButton(14)){
-				//Moves arm to highest position
-				//This position will be acheived by pressing button 14 on joystick 2
-				if(lift_value > 44 && lift_value < 46) {
-					lift_screw_motor.set(0);
-				}else if(lift_value > 45) {
-					lift_screw_motor.set((((lift_value - 45) * -1) * 0.045) - .3);
-				}else if(lift_value < 45) {
-					lift_screw_motor.set(((45 - lift_value) * .035) + .4);
 				}
 			}else {
 				//Code that sets the lift_screw_motor's speed to 0 in the event that no button is pressed at all
@@ -805,11 +789,22 @@ public class Robot extends IterativeRobot {
 			if (stick2.getRawButton(1)) {
 				cube_shoot();
 			}
+			if(stick2.getRawButton(2)) {
+				hook.set(-1);
+			}else if(stick2.getRawButton(6)) {
+				hook.set(.5);
+			}else {
+				hook.set(0);
+			}
+			if(stick2.getRawButton(5)) {
+				climber.set(1);
+			}
 			//Publish SmartDashboard values
-			SmartDashboard.putBoolean("Smooth Drive", stick1.getRawButton(1)); //Indicates whether or not smooth drive is active
-			SmartDashboard.putNumber("Compass Variance", compass_value); //Displays the variance between the IMU's starting direction and it's current angle 
-			SmartDashboard.putNumber("Lift Angle", lift_value); //outputs the value of the lift (displays the average voltage output)
-			SmartDashboard.putNumber("Encoder Value", wheel_counter1.getDistance());//Displays the current encoder count
+			SmartDashboard.putBoolean("Smooth Drive:", stick1.getRawButton(1)); //Indicates whether or not smooth drive is active
+			SmartDashboard.putNumber("Compass Variance:", compass_value); //Displays the variance between the IMU's starting direction and it's current angle 
+			SmartDashboard.putNumber("Lift Angle:", lift_value); //outputs the value of the lift (displays the average voltage output)
+			SmartDashboard.putNumber("Encoder Value:", wheel_counter1.getDistance());//Displays the current encoder count
+			SmartDashboard.putNumber("Wheel Speed:", wheel_counter1.getRate());
 			
 			
 			//Delays Cycles in order to avoid undue CPU usage
@@ -818,9 +813,7 @@ public class Robot extends IterativeRobot {
 			//Reset Pigeon IMU value
 			if(pigeon.getFusedHeading() > 360) {
 				compass_value = 0;
-			}
-			
-			
+			}	
 		}
 	}
 
