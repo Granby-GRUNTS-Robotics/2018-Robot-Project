@@ -28,7 +28,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Spark;
 import edu.wpi.first.wpilibj.Talon;
 
-
 /**
  * The VM is configured to automatically run this class, and to call the
  * functions corresponding to each mode, as described in the IterativeRobot
@@ -69,7 +68,7 @@ public class Robot extends IterativeRobot {
 	Spark grasping_motor_right = new Spark(1);
 
 	//Initialize motors for climbing
-	VictorSP climber = new VictorSP(3);
+	VictorSP climber = new VictorSP(2);
 	
 	WPI_TalonSRX hook = new WPI_TalonSRX(6);
 	
@@ -86,16 +85,10 @@ public class Robot extends IterativeRobot {
 	double initial_lift_value;
 	
 	boolean first_run_lift = true;
-	
-	//Initialize the talons used for testing with the breadboard, leave this commented out
-	//CANTalon talon1 = new CANTalon(2);
-	//CANTalon talon2 = new CANTalon(3);
+	String desired_direction;
 	
 	//Initialize the Gyro/magnetometer "pigeon"
 	PigeonIMU pigeon = new PigeonIMU(0);
-	
-	//Define channels for the joy sticks
-	final int JoystickChannel = 0;
 	
 	//Define the actual joy sticks 
 	Joystick stick1 = new Joystick(0);
@@ -108,22 +101,17 @@ public class Robot extends IterativeRobot {
 	Timer timer = new Timer();
 	Timer cube_shoot_timer = new Timer();
 	
-	//Define variables for auto testing purposes 
-	boolean auto_running;
-	
 	// Define strings that are associated with different autonomous modes
 	final String defaultAuto = "Cross Baseline";
 	final String Single_Placement = "Single Switch Placement";
 	final String Double_Placement = "Double Switch Placement";
 	String autoSelected;
 		
-
 	//define string associated with different stations
 	final String left = "Left Station";
 	final String middle = "Middle Station";
 	final String right = "Right Station";
 	String stationSelected;
-	
 	
 	//Define "chooser" object for auto selector
 	SendableChooser<String> chooser = new SendableChooser<>();
@@ -131,7 +119,119 @@ public class Robot extends IterativeRobot {
 	SendableChooser<String> station_chooser = new SendableChooser<>();
 	
 	//Custom functions 
-	
+	public void snap_to_90(double potential_angle){
+		for(int r = 0; r < 100; r++) {
+			if(potential_angle > 0) {
+				if(potential_angle > 360) {
+					potential_angle = potential_angle - 360;
+				}else{
+					if(potential_angle >= 90 && potential_angle <= 180) {
+						double test1 = 180 - potential_angle;
+						double test2 = potential_angle - 90;
+						if(test1 < test2) {
+							desired_direction = "ccw";
+							r = 101;
+						}else{
+							desired_direction = "cw";
+							r = 101;
+						}
+					}else if(potential_angle >= 0 && potential_angle <= 90) {
+						double test1 = 90 - potential_angle;
+						double test2 = potential_angle - 0;
+						if (test1 < test2) {
+							desired_direction = "ccw";
+							r = 101;
+						}else {
+							desired_direction = "cw";
+							r = 101;
+						}
+					}else if(potential_angle >= 180 && potential_angle <= 270) {
+						double test1 = 270 - potential_angle;
+						double test2 = potential_angle - 180;
+						if (test1 < test2) {
+							desired_direction = "ccw";
+							r = 101;
+						}else {
+							desired_direction = "cw";
+							r = 101;
+						}
+					}else if(potential_angle >= 270 && potential_angle <= 360) {
+						double test1 = 360 - potential_angle;
+						double test2 = potential_angle - 270;
+						if (test1 < test2) {
+							desired_direction = "ccw";
+							r = 101;
+						}else {
+							desired_direction = "cw";
+							r = 101;
+						}
+					}
+				}
+			}else if(potential_angle < 0){
+				if(potential_angle < -360) {
+					potential_angle = potential_angle + 360;
+				}else {
+					if(potential_angle >= -360 && potential_angle <= -270) {
+						double test1 = -270 - potential_angle;
+						double test2 = potential_angle + 360;
+						if(test1 > test2) {
+							desired_direction = "ccw";
+							r = 101;
+						}else{
+							desired_direction = "cw";
+							r = 101;
+						}
+					}else if(potential_angle >= -270 && potential_angle <= -180){
+						double test1 = -180 - potential_angle;
+						double test2 = potential_angle + 270;
+						if(test1 > test2) {
+							desired_direction = "ccw";
+							r = 101;
+						}else{
+							desired_direction = "cw";
+							r = 101;
+						}
+					}else if(potential_angle >= -180 && potential_angle <= -90){
+						double test1 = -90 - potential_angle; 
+						double test2 = potential_angle + 180;
+						if(test1 > test2) {
+							desired_direction = "ccw";
+							r = 101;
+						}else{
+							desired_direction = "cw";
+							r = 101;
+						}
+					}else if(potential_angle >= -90 && potential_angle <= -0){
+						double test1 = 0 - potential_angle;
+						double test2 = potential_angle + 90;
+						if(test1 > test2) {
+							desired_direction = "ccw";
+							r = 101;
+						}else{
+							desired_direction = "cw";
+							r = 101;
+						}
+					}	
+				}
+			}
+			if(desired_direction == "ccw") {
+				if(pigeon.getFusedHeading() % 90 == 0) {
+					robotDrive.drive(.3, -1);
+				}
+				else {
+					robotDrive.drive(0, 0);
+				}
+			}
+			else {
+				if(pigeon.getFusedHeading() % 90 == 0) {
+					robotDrive.drive(.3, 1);
+				}
+				else {
+					robotDrive.drive(0, 0);
+				}	
+			}
+		}
+	}
 	//Function that allows the robot to turn to a very specific degree
 	public void auto_degree_turn( double turn_degree){
 			if((initial_value - pigeon.getFusedHeading()) < (turn_degree - 2)){
@@ -142,12 +242,12 @@ public class Robot extends IterativeRobot {
 				robotDrive.drive(0, 0);
 			}
 	}
-	
-	//Allows the robot to drive with complete directional compensation
-	//Takes 3 arguments, (initial_value, speed, and curve).
-	//Initial value = the magnetometers zero value
-	//Speed = The motor output
-	//Curve = The Gradual turn of the robot (1 is a zero point turn)
+	/**Allows the robot to drive with complete directional compensation
+	*Takes 3 arguments, (initial_value, speed, and curve).
+	*Initial value = the magnetometers zero value
+	*Speed = The motor output
+	*Curve = The Gradual turn of the robot (1 is a zero point turn)
+	*/
 	public void drive_drift_compensation( double initial_value, double speed, double curve, double start_angle) {
 		
 		if((pigeon.getFusedHeading() - (initial_value - start_angle)) > 1) { //Will fix the robots orientation in the case that it drifts, or is hit.
@@ -161,7 +261,7 @@ public class Robot extends IterativeRobot {
 	}
 	public void cube_shoot() {//right before this is run, set first time to 1. 
 		if(first_run_lift) {
-			if (cube_shoot_timer.get() == 0 || cube_shoot_timer.get() > 4) {
+			if (cube_shoot_timer.get() == 0 || cube_shoot_timer.get() > 3.5) {
 				cube_shoot_timer.reset();
 				cube_shoot_timer.start();
 				first_run_lift = false;
@@ -178,13 +278,10 @@ public class Robot extends IterativeRobot {
 					lift_screw_motor.set(((30 - lift_value) * .045) + .4);
 				}
 			}else if(cube_shoot_timer.get() < 2 && cube_shoot_timer.get() > 1) {
-				grasping_motor_left.set(1);
-				grasping_motor_right.set(1);
-			}else if(cube_shoot_timer.get() < 2.5 && cube_shoot_timer.get() > 2) {
-				wrist.set(false);
-			}else if(cube_shoot_timer.get() == 2.5) {
+				grip0.set(true);
+				grip1.set(true);
+			}else if(cube_shoot_timer.get() == 2) {
 				first_run_lift = true;
-				
 			}
 		}
 	}	
@@ -192,13 +289,6 @@ public class Robot extends IterativeRobot {
 	public Robot() {
 		//Robot drive
 		robotDrive = new RobotDrive(motor1, motor2);
-		
-		//Motor inversions (only uncomment if necessary)
-		//robotDrive.setInvertedMotor(motor1, true);
-		//robotDrive.setInvertedMotor(motor2, true);
-		
-		//motor2.setInverted(true);
-		//motor1.setInverted(true);
 	}
 	
 	/**
@@ -245,8 +335,6 @@ public class Robot extends IterativeRobot {
 		hook.configContinuousCurrentLimit(40, 10);
 		hook.enableCurrentLimit(true);
 	}
-	
-
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select
 	 * between different autonomous modes using the dashboard. The sendable
@@ -282,6 +370,8 @@ public class Robot extends IterativeRobot {
 		
 		//Reset encoder values
 		wheel_counter1.reset();
+		
+		transmission.set(true);
 	}
 
 	/**
@@ -295,7 +385,6 @@ public class Robot extends IterativeRobot {
 		
 		//Check and execute the delay variable for competition (commented out)
 		//Timer.delay(auto_delay_value);
-		
 		
 		if(autoSelected == Single_Placement){
 			//All of the auto code below is made to place a single power cube onto the switch
@@ -338,7 +427,6 @@ public class Robot extends IterativeRobot {
 						cube_shoot();
 					}
 				}else{
-					
 					//Crosses baseline when robot starts on the left and the switch is on the right
 					if(wheel_counter1.getDistance()  < 7300){
 				    	drive_drift_compensation(initial_value, .4, .3, 0);
@@ -706,7 +794,29 @@ public class Robot extends IterativeRobot {
 				robotDrive.arcadeDrive((stick1.getY() * -1), (stick1.getZ() * -1)); //normal drive
 			}
 			
+			//snap to 90
+			if(stick1.getRawButton(2)) {
+				snap_to_90(pigeon.getFusedHeading());
+			}
 			
+			//automatic transmission
+			/**if (wheel_counter1.getRate() > 5500 && wheel_counter2.getRate() > 5500) {
+				transmission.set(true);
+			}else if (wheel_counter1.getRate() < 5500 && wheel_counter2.getRate() < 5500 && wheel_counter1.getRate() > 300 && wheel_counter2.getRate() > 300) {
+				transmission.set(false);
+			}
+			*/
+			
+			//Manual transmission (for testing)
+			if (stick1.getRawButton(3)) {
+				if(wheel_counter1.getRate() > 300 && wheel_counter2.getRate() > 300) {
+					transmission.set(true);
+				}
+			}else if (stick1.getRawButton(4)) {
+				if(wheel_counter1.getRate() > 300 && wheel_counter2.getRate() > 300)
+					transmission.set(false);
+				}
+			}
 			//The code below maps all buttons to their proper functions
 			if(stick2.getRawButton(9)) { 
 				//opens the pnuematic arms on the robot
@@ -717,11 +827,13 @@ public class Robot extends IterativeRobot {
 				//Closes the pnuematic arms on the robot - soft
 				grip0.set(true);
 				grip1.set(false);
+				grasping_motor_left.set(-1);
 			}
 			else if(stick2.getRawButton(13)) { 
 				//Closes the pnuematic arms on the robot - hard
 				grip0.set(false);
 				grip1.set(false);
+				grasping_motor_left.set(-1);
 			}
 			
 			if (stick2.getRawButton(3)) {
@@ -745,6 +857,8 @@ public class Robot extends IterativeRobot {
 				grasping_motor_left.set(0);
 				grasping_motor_right.set(0);
 			}
+			
+			//Arm stuff
 			if(stick1.getRawButton(12)){ 
 				//code for manually operation of the arm (mostly used for testing purposes, and won't be used during real gameplay)
 				lift_screw_motor.set(-.5);
@@ -752,7 +866,7 @@ public class Robot extends IterativeRobot {
 				//code for manually operation of the arm (mostly used for testing purposes, and won't be used during real gameplay)
 				lift_screw_motor.set(.5);
 				
-			}else if(stick2.getRawButton(10)){
+			}if(stick2.getRawButton(10)){
 				//Moves arm to lowest position (starting position)
 				//This position will be acheived by pressing button 10 on joystick 2
 				if(lift_value > -1 && lift_value < 1) {
@@ -765,16 +879,17 @@ public class Robot extends IterativeRobot {
 			}else if(stick2.getRawButton(12)){
 				//Moves arm to middle position (slightly high for driving)
 				//This position will be acheived by pressing button 12 on joystick 2
-				if(lift_value > 6 && lift_value < 8) {
+				if(lift_value > 4 && lift_value < 6) {
 					lift_screw_motor.set(0);
-				}else if(lift_value > 7) {
-					lift_screw_motor.set((((lift_value - 7) * -1) * 0.045) - .3);
-				}else if(lift_value < 7) {
-					lift_screw_motor.set(((7 - lift_value) * .045) + .4);
+				}else if(lift_value > 5) {
+					lift_screw_motor.set((((lift_value - 5) * -1) * 0.045) - .3);
+				}else if(lift_value < 5) {
+					lift_screw_motor.set(((5 - lift_value) * .045) + .4);
 				}
 			}else if(stick2.getRawButton(14)){
 				//Moves arm to middle position (switch height)
 				//This position will be acheived by pressing button 14 on joystick 2
+				wrist.set(true);
 				if(lift_value > 29 && lift_value < 31) {
 					lift_screw_motor.set(0);
 				}else if(lift_value > 30) {
@@ -786,26 +901,30 @@ public class Robot extends IterativeRobot {
 				//Code that sets the lift_screw_motor's speed to 0 in the event that no button is pressed at all
 				lift_screw_motor.set(0);
 			}
+			
+			//Calls the cube shoot function when the trigger is pressed
 			if (stick2.getRawButton(1)) {
 				cube_shoot();
 			}
+			
+			//Moves the hook upward when button 2 is pressed
 			if(stick2.getRawButton(2)) {
-				hook.set(-1);
-			}else if(stick2.getRawButton(6)) {
-				hook.set(.5);
+				hook.set(stick2.getY());
 			}else {
 				hook.set(0);
 			}
+			
+			//Turns the winch up
 			if(stick2.getRawButton(5)) {
 				climber.set(1);
 			}
+			
 			//Publish SmartDashboard values
 			SmartDashboard.putBoolean("Smooth Drive:", stick1.getRawButton(1)); //Indicates whether or not smooth drive is active
 			SmartDashboard.putNumber("Compass Variance:", compass_value); //Displays the variance between the IMU's starting direction and it's current angle 
 			SmartDashboard.putNumber("Lift Angle:", lift_value); //outputs the value of the lift (displays the average voltage output)
 			SmartDashboard.putNumber("Encoder Value:", wheel_counter1.getDistance());//Displays the current encoder count
 			SmartDashboard.putNumber("Wheel Speed:", wheel_counter1.getRate());
-			
 			
 			//Delays Cycles in order to avoid undue CPU usage
 			Timer.delay(.005);
@@ -815,7 +934,6 @@ public class Robot extends IterativeRobot {
 				compass_value = 0;
 			}	
 		}
-	}
 
 	/**
 	 * This function is called periodically during test mode
