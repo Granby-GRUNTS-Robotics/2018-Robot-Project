@@ -610,6 +610,7 @@ public class Robot extends IterativeRobot {
 					if(timer.get() < 13 && timer.get() > 11.5) {
 						auto_degree_turn(90);
 						wheel_counter1.reset();
+					}
 				}else{
 					if(timer.get() < 2 && timer.get() > 0){
 						if(wheel_counter1.getDistance()  < -1700){
@@ -643,7 +644,6 @@ public class Robot extends IterativeRobot {
 					if(timer.get() < 13 && timer.get() > 11.5) {
 						auto_degree_turn(-90);
 						wheel_counter1.reset();
-						}
 					}
 				}
 			}
