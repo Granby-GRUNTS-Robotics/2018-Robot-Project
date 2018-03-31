@@ -58,6 +58,7 @@ public class Robot extends IterativeRobot {
 	Encoder wheel_counter2 = new Encoder(1, 0, false, EncodingType.k4X);
 	Encoder wheel_counter1 = new Encoder(3, 2, false, EncodingType.k4X);
 	
+	
 	//Intitialize the Victor SPX motor controls
 	WPI_VictorSPX motor1 = new WPI_VictorSPX(kLeftChannel);
 	WPI_VictorSPX motor2 = new WPI_VictorSPX(kRightChannel);
@@ -100,6 +101,15 @@ public class Robot extends IterativeRobot {
 	
 	//Define the robots drive train as "robotDrive"
 	RobotDrive robotDrive;
+	
+	//Define variables for game data indicators
+	boolean LSwitch;
+	boolean RSwitch;
+	boolean LScale;
+	boolean RScale;
+	boolean LEnemySwitch;
+	boolean REnemySwitch;
+	
 	
 	//Define the timer variables
 	Timer timer = new Timer();
@@ -425,6 +435,8 @@ public class Robot extends IterativeRobot {
 		hook.configContinuousCurrentLimit(40, 10);
 		hook.enableCurrentLimit(true);
 		
+		wheel_counter1.setReverseDirection(true);
+		wheel_counter2.setReverseDirection(true);
 	}
 	/**
 	 * This autonomous (along with the chooser code above) shows how to select
@@ -465,7 +477,7 @@ public class Robot extends IterativeRobot {
 			
 		//Retreive information from the control system
 		gameData = DriverStation.getInstance().getGameSpecificMessage();
-		
+			
 		//Reset encoder values
 		wheel_counter1.reset();
 		
@@ -483,12 +495,36 @@ public class Robot extends IterativeRobot {
 		
 		//Shift the transmission into high gear at the start of auto
 		transmission.set(false);
-		
-		
+		//Assigns dashboard indicators to indicate which switch/scale is which
+		if (gameData.charAt(0) == 'L') {
+			LSwitch = true;
+			RSwitch = false;
+		}else {
+			LSwitch = false;
+			RSwitch = true;
+		}
+		if (gameData.charAt(1) == 'L') {
+			LScale = true;
+			RScale = false;
+		}else {
+			LScale = false;
+			RScale = true;
+		}
+		if (gameData.charAt(2) == 'L') {
+			LEnemySwitch = true;
+			REnemySwitch = false;
+		}else {
+			LEnemySwitch = false;
+			REnemySwitch = true;
+		}
+		SmartDashboard.putBoolean("Left Switch", LSwitch);
+		SmartDashboard.putBoolean("Right Switch", RSwitch);
+		SmartDashboard.putBoolean("Left Scale", LScale);
+		SmartDashboard.putBoolean("Right Scale", RScale);
+		SmartDashboard.putBoolean("Left Enemy Switch", LEnemySwitch);
+		SmartDashboard.putBoolean("Right Enemy Switch", REnemySwitch);
 		//Check and execute the delay variable for competition (commented out)
 		//Timer.delay(auto_delay_value);
-		
-		
 		
 		if(autoSelected == Single_Placement){
 			wrist.set(false);
@@ -511,16 +547,17 @@ public class Robot extends IterativeRobot {
 					}
 					
 					//drives up to switch
-					if(timer.get() < 8 && timer.get() > 6) {
-						if(wheel_counter1.getDistance() > -800){
-							drive_drift_compensation(initial_value, -.5, -.3, 90); 
-						}else if (wheel_counter1.getDistance() < -1500){
+					if(timer.get() < 10 && timer.get() > 6) {
+						if(wheel_counter1.getDistance() > -1200){
+							drive_drift_compensation(initial_value, -.2, -.3, 90); 
+						}else if (wheel_counter1.getDistance() < -1800){
 							drive_drift_compensation(initial_value, .2, .3, 90);
 						}
 					}
 					
 					//Launch the cube
-					if(timer.get() < 10 && timer.get() > 8) {
+					if(timer.get() < 12 && timer.get() > 10) {
+						robotDrive.drive(-.15, 0);
 						grasping_motor_left.set(-1);
 						grasping_motor_right.set(-1);
 					}else{
@@ -570,15 +607,16 @@ public class Robot extends IterativeRobot {
 						wheel_counter1.reset();
 					}
 					//drives up to switch
-					if(timer.get() < 8 && timer.get() > 6) {
-						if(wheel_counter1.getDistance() > -800){
-							drive_drift_compensation(initial_value, -.5, -.3, -90); 
-						}else if (wheel_counter1.getDistance() < -1500){
+					if(timer.get() < 10 && timer.get() > 6) {
+						if(wheel_counter1.getDistance() > -1200){
+							drive_drift_compensation(initial_value, -.2, -.3, -90); 
+						}else if (wheel_counter1.getDistance() < -1800){
 							drive_drift_compensation(initial_value, .2, .3, -90);
 						}
 					}
 					//Launch the cube
-					if(timer.get() < 10 && timer.get() > 8) {
+					if(timer.get() < 12 && timer.get() > 10) {
+						robotDrive.drive(-.15, 0);
 						grasping_motor_left.set(-1);
 						grasping_motor_right.set(-1);
 					}else{
@@ -622,16 +660,17 @@ public class Robot extends IterativeRobot {
 					}
 					
 					//Drive backwards twords the switch
-					if(timer.get() < 10.5 && timer.get() > 8.5) {
+					if(timer.get() < 12.5 && timer.get() > 8.5) {
 						if(wheel_counter1.getDistance() > -1300){
-							drive_drift_compensation(initial_value, -.5, -.3, 0); 
+							drive_drift_compensation(initial_value, -.3, -.3, 0); 
 						}else if (wheel_counter1.getDistance() < -1800){
 							drive_drift_compensation(initial_value, .2, .3, 0);
 						}
 					} 
 					
 					//Launch the cube
-					if(timer.get() < 12.5 && timer.get() > 10.5) {
+					if(timer.get() < 14.5 && timer.get() > 12.5) {
+						robotDrive.drive(-.15, 0);
 						grasping_motor_left.set(-1);
 						grasping_motor_right.set(-1);
 					}else{
@@ -672,16 +711,17 @@ public class Robot extends IterativeRobot {
 					}
 					
 					//Drive backwards twords the switch
-					if(timer.get() < 10.5 && timer.get() > 8.5) {
+					if(timer.get() < 12.5 && timer.get() > 8.5) {
 						if(wheel_counter1.getDistance() > -1300){
-							drive_drift_compensation(initial_value, -.5, -.3, 0); 
+							drive_drift_compensation(initial_value, -.3, -.3, 0); 
 						}else if (wheel_counter1.getDistance() < -1800){
 							drive_drift_compensation(initial_value, .2, .3, 0);
 						}
 					} 
 					
 					//Launch the cube
-					if(timer.get() < 12.5 && timer.get() > 10.5) {
+					if(timer.get() < 14.5 && timer.get() > 12.5) {
+						robotDrive.drive(-.15, 0);
 						grasping_motor_left.set(-1);
 						grasping_motor_right.set(-1);
 					}else{
@@ -702,16 +742,13 @@ public class Robot extends IterativeRobot {
 				//Executes when the robot is placed in front of the middle station
 			}
 		}else if(autoSelected == Simple_Placement) {
-			
-			if(timer.get() < 4 && timer.get() > 0) {
-				if(wheel_counter1.getDistance()  > -6000){
-			    	drive_drift_compensation(initial_value, -.5, -.3, 0);
-				}
-			}
-			
 			if(stationSelected == left){
-				
 				if(gameData.charAt(0) == 'L') {
+					if(timer.get() < 4 && timer.get() > 0) {
+						if(wheel_counter1.getDistance()  > -6000){
+					    	drive_drift_compensation(initial_value, -.5, -.3, 0);
+						}
+					}
 					if(timer.get() < 6 && timer.get() > 4) {
 						grasping_motor_left.set(-1);
 						grasping_motor_right.set(-1);
@@ -720,25 +757,35 @@ public class Robot extends IterativeRobot {
 						grasping_motor_right.set(0);
 					}
 				}else {
-					grasping_motor_left.set(0);
-					grasping_motor_right.set(0);
+					if(timer.get() < 4 && timer.get() > 0) {
+						if(wheel_counter1.getDistance()  > -6000){
+					    	drive_drift_compensation(initial_value, -.5, -.3, 0);
+						}
+					}
 				}
 				
-			}else { 
+			}else{ 
 				
 				if(gameData.charAt(0) == 'L') {
-					grasping_motor_left.set(0);
-					grasping_motor_right.set(0);
+					if(timer.get() < 4 && timer.get() > 0) {
+						if(wheel_counter1.getDistance()  > -6000){
+					    	drive_drift_compensation(initial_value, -.5, -.3, 0);
+						}
+					}
 				}else {
+					if(timer.get() < 4 && timer.get() > 0) {
+						if(wheel_counter1.getDistance()  > -6000){
+					    	drive_drift_compensation(initial_value, -.5, -.3, 0);
+						}
+					}
 					if(timer.get() < 6 && timer.get() > 4) {
 						grasping_motor_left.set(-1);
 						grasping_motor_right.set(-1);
 					}else{
 						grasping_motor_left.set(0);
-						grasping_motor_right.set(0);
+						grasping_motor_right.set(0);	
 					}
-				}
-				
+				}	
 			}
 		}else{
 	
@@ -960,10 +1007,38 @@ public class Robot extends IterativeRobot {
 			}
 			
 			//Turns the winch up
-			if(stick2.getRawButton(5)) {
-				climber.set(-1);
+			if(stick2.getRawButton(5) && stick2.getRawButton(31) == false) {
+				climber.set(-1);//Turns the winch up
+			}else if(stick2.getRawButton(5) && stick2.getRawButton(31)) {
+				climber.set(1);
 			}else{
 				climber.set(0);
+			}
+			
+			//Assigns the gamedata variable     
+			gameData = DriverStation.getInstance().getGameSpecificMessage();
+			
+			//Assigns dashboard indicators to indicate which switch/scale is which
+			if (gameData.charAt(0) == 'L') {
+				LSwitch = true;
+				RSwitch = false;
+			}else {
+				LSwitch = false;
+				RSwitch = true;
+			}
+			if (gameData.charAt(1) == 'L') {
+				LScale = true;
+				RScale = false;
+			}else {
+				LScale = false;
+				RScale = true;
+			}
+			if (gameData.charAt(2) == 'L') {
+				LEnemySwitch = true;
+				REnemySwitch = false;
+			}else {
+				LEnemySwitch = false;
+				REnemySwitch = true;
 			}
 			
 			//Publish SmartDashboard values
@@ -976,6 +1051,13 @@ public class Robot extends IterativeRobot {
 			SmartDashboard.putNumber("Wheel Speed 2:", wheel_counter2.getRate());
 			SmartDashboard.putString("Desired Direction", desired_direction);
 			SmartDashboard.putBoolean("Lift Limit Trigger", lift_limit.get());
+			
+			SmartDashboard.putBoolean("Left Switch", LSwitch);
+			SmartDashboard.putBoolean("Right Switch", RSwitch);
+			SmartDashboard.putBoolean("Left Scale", LScale);
+			SmartDashboard.putBoolean("Right Scale", RScale);
+			SmartDashboard.putBoolean("Left Enemy Switch", LEnemySwitch);
+			SmartDashboard.putBoolean("Right Enemy Switch", REnemySwitch);
 			
 			
 			//Delays Cycles in order to avoid undue CPU usage

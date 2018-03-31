@@ -122,9 +122,9 @@
           </children>
         </children>
       </children>
-      <children xsi:type="basic:PartStack" xmi:id="_kSWEISSHEeiGE6niykzc1A" elementId="stickyFolderRight" containerData="2500" selectedElement="_kSWEIySHEeiGE6niykzc1A">
+      <children xsi:type="basic:PartStack" xmi:id="_kSWEISSHEeiGE6niykzc1A" elementId="stickyFolderRight" toBeRendered="false" containerData="2500">
         <children xsi:type="advanced:Placeholder" xmi:id="_kSWEIiSHEeiGE6niykzc1A" elementId="org.eclipse.help.ui.HelpView" toBeRendered="false" ref="_kSTn4CSHEeiGE6niykzc1A"/>
-        <children xsi:type="advanced:Placeholder" xmi:id="_kSWEIySHEeiGE6niykzc1A" elementId="org.eclipse.ui.internal.introview" ref="_kSVdECSHEeiGE6niykzc1A"/>
+        <children xsi:type="advanced:Placeholder" xmi:id="_kSWEIySHEeiGE6niykzc1A" elementId="org.eclipse.ui.internal.introview" toBeRendered="false" ref="_kSVdECSHEeiGE6niykzc1A"/>
         <children xsi:type="advanced:Placeholder" xmi:id="_kSWEJCSHEeiGE6niykzc1A" elementId="org.eclipse.ui.cheatsheets.views.CheatSheetView" toBeRendered="false" ref="_kSVdESSHEeiGE6niykzc1A"/>
       </children>
     </children>
@@ -140,11 +140,12 @@
       <persistedState key="memento" value="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?>&#xD;&#xA;&lt;view>&#xD;&#xA;&lt;presentation currentPage=&quot;qroot&quot; restore=&quot;true&quot;/>&#xD;&#xA;&lt;standbyPart/>&#xD;&#xA;&lt;/view>"/>
       <tags>View</tags>
       <tags>categoryTag:General</tags>
+      <tags>activeOnClose</tags>
       <menus xmi:id="_kwVAoCSHEeiGE6niykzc1A" elementId="org.eclipse.ui.internal.introview">
         <tags>ViewMenu</tags>
         <tags>menuContribution:menu</tags>
       </menus>
-      <toolbar xmi:id="_kwVAoSSHEeiGE6niykzc1A" elementId="org.eclipse.ui.internal.introview"/>
+      <toolbar xmi:id="_kwVAoSSHEeiGE6niykzc1A" elementId="org.eclipse.ui.internal.introview" visible="false"/>
     </sharedElements>
     <sharedElements xsi:type="basic:Part" xmi:id="_kSVdESSHEeiGE6niykzc1A" elementId="org.eclipse.ui.cheatsheets.views.CheatSheetView" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView" label="Cheat Sheets" iconURI="platform:/plugin/org.eclipse.ui.cheatsheets/icons/view16/cheatsheet_view.gif" tooltip="" closeable="true">
       <persistedState key="originalCompatibilityViewClass" value="org.eclipse.ui.internal.cheatsheets.views.CheatSheetView"/>
@@ -305,7 +306,7 @@
       </children>
       <children xsi:type="menu:ToolBar" xmi:id="_kThv4CSHEeiGE6niykzc1A" elementId="org.eclipse.ui.workbench.file">
         <tags>Draggable</tags>
-        <children xsi:type="menu:HandledToolItem" xmi:id="_kTq50CSHEeiGE6niykzc1A" elementId="print" visible="false" iconURI="platform:/plugin/org.eclipse.ui/icons/full/etool16/print_edit.png" tooltip="Print" enabled="false" command="_j-4VwSSHEeiGE6niykzc1A"/>
+        <children xsi:type="menu:HandledToolItem" xmi:id="_sc2hhzUcEeiKPJM-mtSAQg" elementId="print" visible="false" iconURI="platform:/plugin/org.eclipse.ui/icons/full/etool16/print_edit.png" tooltip="Print" command="_j-4VwSSHEeiGE6niykzc1A"/>
       </children>
       <children xsi:type="menu:ToolBar" xmi:id="_kThv4SSHEeiGE6niykzc1A" elementId="additions" toBeRendered="false">
         <tags>toolbarSeparator</tags>
@@ -329,7 +330,7 @@
       </children>
       <children xsi:type="menu:ToolBar" xmi:id="_kTiW8iSHEeiGE6niykzc1A" elementId="org.eclipse.ui.workbench.navigate">
         <tags>Draggable</tags>
-        <children xsi:type="menu:HandledToolItem" xmi:id="_kTsvACSHEeiGE6niykzc1A" elementId="org.eclipse.ui.window.pinEditor" visible="false" iconURI="platform:/plugin/org.eclipse.ui/icons/full/etool16/pin_editor.png" tooltip="Pin Editor" type="Check" command="_j-3uwCSHEeiGE6niykzc1A"/>
+        <children xsi:type="menu:HandledToolItem" xmi:id="_sc8oKTUcEeiKPJM-mtSAQg" elementId="org.eclipse.ui.window.pinEditor" visible="false" iconURI="platform:/plugin/org.eclipse.ui/icons/full/etool16/pin_editor.png" tooltip="Pin Editor" type="Check" command="_j-3uwCSHEeiGE6niykzc1A"/>
       </children>
       <children xsi:type="menu:ToolBar" xmi:id="_kTiW8ySHEeiGE6niykzc1A" elementId="group.editor" toBeRendered="false">
         <tags>toolbarSeparator</tags>
@@ -1176,9 +1177,9 @@
     <tags>View</tags>
     <tags>categoryTag:Java</tags>
   </descriptors>
-  <descriptors xmi:id="_kCxXECSHEeiGE6niykzc1A" elementId="org.eclipse.ui.texteditor.TemplatesView" label="Templates" iconURI="platform:/plugin/org.eclipse.cdt.ui/icons/view16/templates.gif" tooltip="" category="General" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
+  <descriptors xmi:id="_kCxXECSHEeiGE6niykzc1A" elementId="org.eclipse.ui.texteditor.TemplatesView" label="Templates" iconURI="platform:/plugin/org.eclipse.jdt.ui/icons/full/eview16/templates.png" tooltip="" category="General" closeable="true" contributionURI="bundleclass://org.eclipse.ui.workbench/org.eclipse.ui.internal.e4.compatibility.CompatibilityView">
     <persistedState key="originalCompatibilityViewClass" value="org.eclipse.ui.texteditor.templates.TemplatesView"/>
-    <persistedState key="originalCompatibilityViewBundle" value="org.eclipse.cdt.ui"/>
+    <persistedState key="originalCompatibilityViewBundle" value="org.eclipse.jdt.ui"/>
     <tags>View</tags>
     <tags>categoryTag:General</tags>
   </descriptors>
